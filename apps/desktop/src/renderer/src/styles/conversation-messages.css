@@ -22,7 +22,7 @@
 }
 
 .message.is-empty-error {
-  display: none;
+  display: block;
 }
 
 .message-copy {
@@ -46,6 +46,14 @@
   50% {
     opacity: 0;
   }
+}
+
+.message-error-copy {
+  margin-top: 9px;
+  color: var(--danger-text, #c0392b);
+  font-size: 0.785714rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .message-stopped-copy {

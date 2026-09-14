@@ -22,7 +22,9 @@ import {
   type TextViewMode,
   type WorkspacePaneLayout,
   type WorkspaceAgentSettings,
-  type WorkspaceAgentSettingsInput
+  type WorkspaceAgentSettingsInput,
+  type WebServiceSettings,
+  type WebServiceStatus
 } from "@deepwrite/contracts";
 import AppIcon from "./AppIcon.vue";
 import AppearanceSettingsPanel from "./AppearanceSettingsPanel.vue";
@@ -69,6 +71,8 @@ const props = defineProps<{
   useNetworkProxy: boolean;
   workspacePaneLayout: WorkspacePaneLayout;
   defaultTextViewMode: TextViewMode;
+  webService: WebServiceSettings;
+  webServiceStatus: WebServiceStatus;
   workspaceAgentSettings: readonly WorkspaceAgentSettings[];
   creativePlotStages: readonly CreativePlotStage[];
   longAgentSettings: LongAgentSettings | null;
@@ -113,6 +117,7 @@ const emit = defineEmits<{
   updateShowInMenuBar: [enabled: boolean];
   updateUseNetworkProxy: [enabled: boolean];
   updateWorkspacePaneLayout: [layout: WorkspacePaneLayout];
+  updateWebService: [patch: { enabled?: boolean; port?: number }];
   updateDefaultTextViewMode: [mode: TextViewMode];
   saveWorkspaceAgents: [settings: WorkspaceAgentSettingsInput];
   retryLongAgents: [];
@@ -157,7 +162,7 @@ const sections: SettingsSection[] = [
     categories: [
       { id: "usage", label: "用量", icon: "ledger" },
       { id: "free-models", label: "免费模型", icon: "model" },
-      { id: "custom-models", label: "自定义模型配置", icon: "model" },
+      { id: "custom-models", label: "自定义供应商配置", icon: "model" },
       { id: "official-models", label: "旧官方小站模型", icon: "model" },
       {
         id: "site-official-models",
@@ -386,7 +391,9 @@ async function selectCategory(id: string): Promise<void> {
           :show-in-menu-bar="showInMenuBar"
           :use-network-proxy="useNetworkProxy"
           :workspace-pane-layout="workspacePaneLayout"
+          :web-service="webService"
           :default-text-view-mode="defaultTextViewMode"
+          :web-service-status="webServiceStatus"
           @update-permission-mode="emit('updatePermissionMode', $event)"
           @update-auto-approve-cross-stage-operations="
             emit('updateAutoApproveCrossStageOperations', $event)
@@ -396,6 +403,7 @@ async function selectCategory(id: string): Promise<void> {
           @update-show-context-usage="emit('updateShowContextUsage', $event)"
           @update-show-in-menu-bar="emit('updateShowInMenuBar', $event)"
           @update-use-network-proxy="emit('updateUseNetworkProxy', $event)"
+          @update-web-service="emit('updateWebService', $event)"
           @update-workspace-pane-layout="
             emit('updateWorkspacePaneLayout', $event)
           "

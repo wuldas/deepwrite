@@ -1,0 +1,35 @@
+FROM node:24-bookworm-slim AS builder
+
+WORKDIR /app
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
+RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/desktop/package.json apps/desktop/package.json
+COPY packages/contracts/package.json packages/contracts/package.json
+COPY packages/pi-runtime-adapter/package.json packages/pi-runtime-adapter/package.json
+COPY packages/shared/package.json packages/shared/package.json
+
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+RUN pnpm --filter @deepwrite/desktop build
+
+FROM node:24-bookworm-slim AS runtime
+
+WORKDIR /app
+ENV NODE_ENV=production
+ENV DEEPWRITE_WEB_HOST=0.0.0.0
+ENV DEEPWRITE_WEB_PUBLIC_HOST=localhost
+
+COPY --from=builder /app/apps/desktop/out ./out
+COPY --from=builder /app/apps/desktop/package.json ./package.json
+
+RUN mkdir -p /data /workspace
+
+VOLUME ["/data", "/workspace"]
+EXPOSE 8742
+
+ENTRYPOINT ["node", "/app/out/main/web-service.js"]
+CMD ["--port", "8742", "--data-dir", "/data", "--workspace-dir", "/workspace"]

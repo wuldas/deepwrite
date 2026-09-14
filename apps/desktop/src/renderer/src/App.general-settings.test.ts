@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import source from "./WorkspaceShell.vue?raw";
+import settingsRuntimeSource from "./composables/useWorkspaceGeneralSettingsRuntime.ts?raw";
 import longWorkspaceSource from "./components/LongWorkspaceModule.vue?raw";
 import writingWorkspaceSource from "./components/WritingWorkspaceModule.vue?raw";
 // @ts-expect-error Loaded as source text by the Vitest-only virtual module.
@@ -13,10 +14,11 @@ import longConversationSource from "./composables/useLongConversationCoordinator
 
 describe("App general settings integration", () => {
   it("loads and persists general settings through the desktop runtime", () => {
-    expect(source).toContain("loadGeneralSettings,");
+    expect(source).toContain("loadGeneralSettings: settingsRuntime.load,");
     expect(lifecycleSource).toContain("options.loadGeneralSettings()");
     expect(source).toContain("window.deepwrite?.generalSettings");
-    expect(source).toContain("useGeneralSettingsCoordinator({");
+    expect(source).toContain("useWorkspaceGeneralSettingsRuntime({");
+    expect(settingsRuntimeSource).toContain("useGeneralSettingsCoordinator({");
     expect(coordinatorSource).toContain("await api.save(snapshot);");
   });
 
@@ -31,6 +33,9 @@ describe("App general settings integration", () => {
       "conversation.selectApprovalMode(permissionMode)"
     );
     expect(source).toContain("applyApprovalMode: applyDefaultApprovalMode");
+    expect(settingsRuntimeSource).toContain(
+      "applyApprovalMode: options.applyApprovalMode"
+    );
     expect(coordinatorSource).toContain(
       "options.applyApprovalMode(permissionMode)"
     );
@@ -43,21 +48,29 @@ describe("App general settings integration", () => {
     expect(longWorkspaceSource).toContain(
       ':approval-mode="conversationController.approvalMode.value"'
     );
-    expect(source).toContain('@update-permission-mode="updatePermissionMode"');
+    expect(source).toContain(
+      '@update-permission-mode="settingsRuntime.updatePermissionMode"'
+    );
   });
 
   it("applies language and menu-bar setting changes", () => {
-    expect(source).toContain("documentRoot: document.documentElement");
+    expect(settingsRuntimeSource).toContain(
+      "documentRoot: document.documentElement"
+    );
     expect(coordinatorSource).toContain(
       "options.documentRoot.lang = resolvedLanguage"
     );
     expect(coordinatorSource).toContain(
       "function updateUseNetworkProxy(enabled: boolean)"
     );
-    expect(source).toContain('@update-language="updateAppLanguage"');
-    expect(source).toContain('@update-show-in-menu-bar="updateShowInMenuBar"');
     expect(source).toContain(
-      '@update-use-network-proxy="updateUseNetworkProxy"'
+      '@update-language="settingsRuntime.updateLanguage"'
+    );
+    expect(source).toContain(
+      '@update-show-in-menu-bar="settingsRuntime.updateShowInMenuBar"'
+    );
+    expect(source).toContain(
+      '@update-use-network-proxy="settingsRuntime.updateUseNetworkProxy"'
     );
   });
 
@@ -66,7 +79,7 @@ describe("App general settings integration", () => {
       "function updateShowContextUsage(enabled: boolean)"
     );
     expect(source).toContain(
-      '@update-show-context-usage="updateShowContextUsage"'
+      '@update-show-context-usage="settingsRuntime.updateShowContextUsage"'
     );
   });
 
@@ -75,7 +88,7 @@ describe("App general settings integration", () => {
       "function updateWorkspacePaneLayout(layout: WorkspacePaneLayout)"
     );
     expect(source).toContain(
-      '@update-workspace-pane-layout="updateWorkspacePaneLayout"'
+      '@update-workspace-pane-layout="settingsRuntime.updateWorkspacePaneLayout"'
     );
     expect(source).toContain("'is-editor-agent-layout'");
     expect(source).toContain(
@@ -107,7 +120,7 @@ describe("App general settings integration", () => {
       "function updateDefaultTextViewMode(mode: TextViewMode)"
     );
     expect(source).toContain(
-      '@update-default-text-view-mode="updateDefaultTextViewMode"'
+      '@update-default-text-view-mode="settingsRuntime.updateDefaultTextViewMode"'
     );
     expect(source).toContain(
       "defaultViewMode: generalSettings.value.defaultTextViewMode"

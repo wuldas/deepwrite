@@ -1,4 +1,3 @@
-import { net, safeStorage } from "electron";
 import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import {
@@ -49,6 +48,7 @@ import {
 } from "@deepwrite/contracts";
 import { DEEPWRITE_PUBLIC_DATA_API_BASE_URL } from "./deepwrite-public-data-config";
 import { describeMarketplaceNetworkError } from "./marketplace-network-error";
+import { NodeSecureStorage, type SecureStorage } from "./secure-storage";
 
 const MARKETPLACE_REQUEST_TIMEOUT_MS = 12_000;
 const MARKETPLACE_MAX_RESPONSE_BYTES = 2 * 1_024 * 1_024;
@@ -59,12 +59,6 @@ type MarketplaceFetcher = (
   init?: RequestInit
 ) => Promise<Response>;
 
-interface SecureStorageLike {
-  isEncryptionAvailable(): boolean;
-  encryptString(value: string): Buffer;
-  decryptString(value: Buffer): string;
-}
-
 interface StoredMarketplaceSession {
   version: 1;
   encryptedToken: string;
@@ -74,7 +68,7 @@ interface StoredMarketplaceSession {
 export interface MarketplaceClientOptions {
   baseUrl?: string;
   fetcher?: MarketplaceFetcher;
-  secureStorage?: SecureStorageLike;
+  secureStorage?: SecureStorage;
   now?: () => number;
   loadCatalogSnapshot?: () => Promise<CatalogSnapshot>;
   installPackage?: (
@@ -414,7 +408,7 @@ function uniqueLibraryTypes(
 export class MarketplaceClient {
   private readonly baseUrl: string;
   private readonly fetcher: MarketplaceFetcher;
-  private readonly storage: SecureStorageLike;
+  private readonly storage: SecureStorage;
   private readonly now: () => number;
   private readonly sessionPath: string;
   private readonly loadCatalogSnapshot:
@@ -431,8 +425,8 @@ export class MarketplaceClient {
     this.baseUrl = normalizeBaseUrl(
       options.baseUrl ?? DEEPWRITE_PUBLIC_DATA_API_BASE_URL
     );
-    this.fetcher = options.fetcher ?? ((input, init) => net.fetch(input, init));
-    this.storage = options.secureStorage ?? safeStorage;
+    this.fetcher = options.fetcher ?? ((input, init) => fetch(input, init));
+    this.storage = options.secureStorage ?? new NodeSecureStorage(userDataPath);
     this.now = options.now ?? Date.now;
     this.sessionPath = join(userDataPath, "config", "marketplace-session.json");
     this.loadCatalogSnapshot = options.loadCatalogSnapshot;

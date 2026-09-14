@@ -306,6 +306,7 @@ export function useModelSettingsDraft(
     openAdvancedConfig,
     closeAdvancedConfig,
     saveAdvancedConfig,
+    submitModelSettings,
     setDefaultModel
   };
 }

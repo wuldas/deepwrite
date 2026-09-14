@@ -3,6 +3,8 @@ import type {
   AppLanguage,
   GeneralPermissionMode,
   TextViewMode,
+  WebServiceSettings,
+  WebServiceStatus,
   WorkspacePaneLayout
 } from "@deepwrite/contracts";
 import PopupSelect from "./PopupSelect.vue";
@@ -17,6 +19,8 @@ defineProps<{
   useNetworkProxy: boolean;
   workspacePaneLayout: WorkspacePaneLayout;
   defaultTextViewMode: TextViewMode;
+  webService: WebServiceSettings;
+  webServiceStatus: WebServiceStatus;
 }>();
 
 const emit = defineEmits<{
@@ -29,6 +33,7 @@ const emit = defineEmits<{
   updateUseNetworkProxy: [enabled: boolean];
   updateWorkspacePaneLayout: [layout: WorkspacePaneLayout];
   updateDefaultTextViewMode: [mode: TextViewMode];
+  updateWebService: [patch: { enabled?: boolean; port?: number }];
 }>();
 
 const languageOptions: Array<{ value: AppLanguage; label: string }> = [
@@ -245,6 +250,67 @@ const textViewModeOptions: Array<{ value: TextViewMode; label: string }> = [
         /></span>
       </label>
     </div>
+
+    <h2 class="settings-group-title">Web 服务</h2>
+    <div class="settings-card">
+      <label class="settings-item">
+        <span class="settings-item-text"
+          ><strong>浏览器访问</strong
+          ><small
+            >在本机 127.0.0.1 启动 Web
+            服务，用浏览器打开同一写作空间；仅本机可访问。</small
+          ></span
+        >
+        <span class="settings-toggle"
+          ><input
+            type="checkbox"
+            :checked="webService.enabled"
+            aria-label="启用 Web 服务"
+            @change="
+              emit('updateWebService', {
+                enabled: ($event.target as HTMLInputElement).checked
+              })
+            "
+        /></span>
+      </label>
+      <div class="settings-item settings-select-item">
+        <span class="settings-item-text"
+          ><strong>端口</strong
+          ><small
+            >服务监听端口（1024–65535）；运行中修改请先关闭服务</small
+          ></span
+        >
+        <input
+          class="web-service-port-input"
+          type="number"
+          min="1024"
+          max="65535"
+          :value="webService.port"
+          :disabled="webService.enabled"
+          aria-label="Web 服务端口"
+          @change="
+            emit('updateWebService', {
+              port: Number(($event.target as HTMLInputElement).value)
+            })
+          "
+        />
+      </div>
+      <p class="web-service-status" data-testid="web-service-status">
+        <template v-if="webServiceStatus.running && webServiceStatus.url">
+          运行中：<a
+            class="web-service-status-link"
+            :href="webServiceStatus.url"
+            target="_blank"
+            rel="noreferrer"
+            >{{ webServiceStatus.url }}</a
+          >
+        </template>
+        <template v-else-if="webServiceStatus.error"
+          >启动失败：{{ webServiceStatus.error }}</template
+        >
+        <template v-else>已停止</template>
+      </p>
+    </div>
   </section>
 </template>
 
@@ -263,5 +329,32 @@ const textViewModeOptions: Array<{ value: TextViewMode; label: string }> = [
   min-width: 160px;
   max-width: 210px;
   flex: 0 1 210px;
+}
+
+.web-service-port-input {
+  width: 120px;
+  padding: 6px 10px;
+  border: 1px solid var(--theme-line);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.web-service-port-input:disabled {
+  opacity: 0.6;
+}
+
+.web-service-status {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  font-size: 0.85em;
+}
+
+.web-service-status-link {
+  color: var(--accent);
 }
 </style>

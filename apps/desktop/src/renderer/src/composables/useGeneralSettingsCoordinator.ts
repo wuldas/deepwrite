@@ -4,6 +4,8 @@ import {
   type GeneralPermissionMode,
   type GeneralSettings,
   type TextViewMode,
+  type WebServiceSettings,
+  type WebServiceStatus,
   type WorkspacePaneLayout
 } from "@deepwrite/contracts";
 import type { Ref } from "vue";
@@ -28,6 +30,7 @@ export interface GeneralSettingsCoordinatorOptions {
   autoSaveEnabled: Ref<boolean>;
   api(): GeneralSettingsApi | undefined;
   publishLoaded(settings: GeneralSettings): void;
+  publishWebServiceStatus?(status: WebServiceStatus): void;
   legacyAutoSave: boolean;
   storage: Storage;
   documentRoot: GeneralSettingsDocumentRoot;
@@ -75,7 +78,8 @@ export function useGeneralSettingsCoordinator(
     const operation = saveChain
       .catch(() => undefined)
       .then(async () => {
-        await api.save(snapshot);
+        const saved = await api.save(snapshot);
+        options.publishWebServiceStatus?.(saved.webServiceStatus);
       });
     saveChain = operation.catch((error: unknown) => {
       options.notifications.warning(
@@ -103,6 +107,7 @@ export function useGeneralSettingsCoordinator(
     try {
       let shouldPersistLegacyAutoSave = false;
       const snapshot = await api.list();
+      options.publishWebServiceStatus?.(snapshot.webServiceStatus);
       shouldPersistLegacyAutoSave =
         !snapshot.persisted && options.legacyAutoSave;
       const settings = shouldPersistLegacyAutoSave
@@ -191,6 +196,13 @@ export function useGeneralSettingsCoordinator(
     queueSave();
   }
 
+  function updateWebService(patch: Partial<WebServiceSettings>): void {
+    applyLocalPatch({
+      webService: { ...options.settings.value.webService, ...patch }
+    });
+    queueSave();
+  }
+
   function updateWorkspacePaneLayout(layout: WorkspacePaneLayout): void {
     applyLocalPatch({ workspacePaneLayout: layout });
     queueSave();
@@ -224,6 +236,7 @@ export function useGeneralSettingsCoordinator(
     updateShowContextUsage,
     updateShowInMenuBar,
     updateUseNetworkProxy,
+    updateWebService,
     updateWorkspacePaneLayout
   };
 }

@@ -54,6 +54,10 @@ export default defineConfig({
             appRoot,
             "src/utilities/conversation-storage/worker-entry.ts"
           ),
+          "web-service": resolve(
+            appRoot,
+            "src/main/web-service/standalone-entry.ts"
+          ),
           "utilities/core-entry": resolve(
             appRoot,
             "src/utilities/core-entry.ts"

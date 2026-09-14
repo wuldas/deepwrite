@@ -1,4 +1,4 @@
-import { safeStorage } from "electron";
+import type { SecureStorage } from "./secure-storage";
 import {
   AgentProviderRuntimeConfigSchema,
   type AgentProviderRuntimeConfig,
@@ -11,29 +11,37 @@ import {
   type ModelConfigSnapshot
 } from "./model-config-state";
 
-export function decryptModelKey(encrypted: string | undefined): string {
+export function decryptModelKey(
+  encrypted: string | undefined,
+  secureStorage: SecureStorage
+): string {
   if (!encrypted) return "";
-  if (!safeStorage.isEncryptionAvailable()) {
+  if (!secureStorage.isEncryptionAvailable()) {
     throw new Error("系统安全存储当前不可用，无法解密这个模型的 API Key。");
   }
   try {
-    return safeStorage.decryptString(Buffer.from(encrypted, "base64"));
+    return secureStorage.decryptString(Buffer.from(encrypted, "base64"));
   } catch {
     throw new Error("模型 API Key 解密失败，请在模型配置中重新填写并保存。");
   }
 }
 
-function storedKey(model: ModelConfigInput, secrets: DiskModelSecrets): string {
+function storedKey(
+  model: ModelConfigInput,
+  secrets: DiskModelSecrets,
+  secureStorage: SecureStorage
+): string {
   const id =
     model.managedBy === "deepwrite-official"
       ? DEEPWRITE_OFFICIAL_TOKEN_SECRET_ID
       : model.id;
-  return decryptModelKey(secrets.encryptedApiKeys[id]);
+  return decryptModelKey(secrets.encryptedApiKeys[id], secureStorage);
 }
 
 export function resolveSavedModel(
   state: ModelConfigSnapshot,
-  modelId?: string
+  modelId: string | undefined,
+  secureStorage: SecureStorage
 ): AgentProviderRuntimeConfig | undefined {
   if (state.settings.models.length === 0) {
     if (modelId) throw new Error("所选模型不存在，请刷新模型配置后重试。");
@@ -51,13 +59,14 @@ export function resolveSavedModel(
   );
   return AgentProviderRuntimeConfigSchema.parse({
     ...model,
-    apiKey: storedKey(model, state.secrets)
+    apiKey: storedKey(model, state.secrets, secureStorage)
   });
 }
 
 export function resolveDraftModel(
   parsedModel: ModelConfigInput,
-  state: ModelConfigSnapshot
+  state: ModelConfigSnapshot,
+  secureStorage: SecureStorage
 ): AgentProviderRuntimeConfig {
   const model = synchronizeManagedModel(
     parsedModel,
@@ -66,7 +75,9 @@ export function resolveDraftModel(
     true
   );
   let apiKey = model.managedBy ? "" : (model.apiKey ?? "");
-  if (!apiKey && !model.clearApiKey) apiKey = storedKey(model, state.secrets);
+  if (!apiKey && !model.clearApiKey) {
+    apiKey = storedKey(model, state.secrets, secureStorage);
+  }
   if (model.managedBy === "deepwrite-official" && !apiKey) {
     throw new Error("请先在“设置 → DeepWrite 官方模型”中添加官方令牌。");
   }
@@ -75,18 +86,17 @@ export function resolveDraftModel(
 }
 
 export function officialTokenSuffix(
-  secrets: DiskModelSecrets
+  secrets: DiskModelSecrets,
+  secureStorage: SecureStorage
 ): string | undefined {
   const encrypted =
     secrets.encryptedApiKeys[DEEPWRITE_OFFICIAL_TOKEN_SECRET_ID];
   if (!encrypted) return undefined;
-  if (!safeStorage.isEncryptionAvailable()) {
+  if (!secureStorage.isEncryptionAvailable()) {
     throw new Error("系统安全存储当前不可用，无法查询当前 Key 的剩余用量。");
   }
   try {
-    return safeStorage
-      .decryptString(Buffer.from(encrypted, "base64"))
-      .slice(-4);
+    return secureStorage.decryptString(Buffer.from(encrypted, "base64")).slice(-4);
   } catch {
     throw new Error("官方令牌解密失败，请重新填写并保存。");
   }

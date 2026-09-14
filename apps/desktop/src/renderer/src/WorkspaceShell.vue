@@ -48,7 +48,7 @@ import {
 } from "./composables/useCatalogLibraryTransactionsCoordinator";
 import { useDraftRecoveryPersistence } from "./composables/useDraftRecoveryPersistence";
 import { useEditorAutoSaveCoordinator } from "./composables/useEditorAutoSaveCoordinator";
-import { useGeneralSettingsCoordinator } from "./composables/useGeneralSettingsCoordinator";
+import { useWorkspaceGeneralSettingsRuntime } from "./composables/useWorkspaceGeneralSettingsRuntime";
 import { useWorkspaceLifecycleCoordinator } from "./composables/useWorkspaceLifecycleCoordinator";
 import {
   useLazyLearningImitationController,
@@ -305,32 +305,18 @@ const {
       error instanceof Error ? error.message : "保存编辑器草稿失败。"
     )
 });
-const {
-  dispose: disposeGeneralSettings,
-  load: loadGeneralSettings,
-  updateAutoApproveCrossStageOperations,
-  updateAutoSave: updateEditorAutoSave,
-  updateDefaultTextViewMode,
-  updateLanguage: updateAppLanguage,
-  updatePermissionMode,
-  updateShowContextUsage,
-  updateShowInMenuBar,
-  updateUseNetworkProxy,
-  updateWorkspacePaneLayout
-} = useGeneralSettingsCoordinator({
-  settings: generalSettings,
+const settingsRuntime = useWorkspaceGeneralSettingsRuntime({
+  generalSettings,
   autoSaveEnabled: editorAutoSaveEnabled,
   api: () => window.deepwrite?.generalSettings,
-  publishLoaded: (settings) => settingsStore.markLoaded("general", settings),
+  onLoaded: (settings) => settingsStore.markLoaded("general", settings),
+  onWebServiceStatus: settingsStore.setWebServiceStatus,
   legacyAutoSave: legacyGeneralPreferences.autoSave,
-  storage: window.localStorage,
-  documentRoot: document.documentElement,
-  browserLanguage: () => navigator.language,
+  notifications: uiMessage,
   applyApprovalMode: applyDefaultApprovalMode,
   scheduleDirtyAutoSave: scheduleDirtyEditorDraftsForAutoSave,
   cancelAutoSave: cancelEditorAutoSave,
-  resumeAutomaticAgentEdits: resumeRecoveredAutomaticAgentEditsIfNeeded,
-  notifications: uiMessage
+  resumeAutomaticAgentEdits: resumeRecoveredAutomaticAgentEditsIfNeeded
 });
 
 function revealTextPane(): void {
@@ -1481,7 +1467,7 @@ const {
   },
   settings: {
     permissionMode: () => generalSettings.value.permissionMode,
-    updatePermissionMode
+    updatePermissionMode: settingsRuntime.updatePermissionMode
   },
   commands: {
     stopGeneration: stopLongGenerationCommand
@@ -1546,7 +1532,7 @@ const {
   },
   settings: {
     permissionMode: () => generalSettings.value.permissionMode,
-    updatePermissionMode
+    updatePermissionMode: settingsRuntime.updatePermissionMode
   },
   runtimeAvailable: () => hasDesktopRuntime.value,
   showConversation: featureHost.showConversation,
@@ -2391,7 +2377,7 @@ const workspaceLifecycle = useWorkspaceLifecycleCoordinator({
   reconcileLayout: reconcilePaneWidths,
   draftRecovery: draftRecoveryPersistence,
   hydrateConversationPreferences,
-  loadGeneralSettings,
+  loadGeneralSettings: settingsRuntime.load,
   startSystemEvents: startWorkspaceSystemEvents,
   startDesktopSideEffects: async () => {
     await Promise.all([loadAppAlerts(), featureHost.loadMarketplaceSession()]);
@@ -2425,7 +2411,7 @@ const workspaceLifecycle = useWorkspaceLifecycleCoordinator({
     () => catalogIndexStore.dispose()
   ],
   cleanup: [
-    disposeGeneralSettings,
+    settingsRuntime.dispose,
     () =>
       conversationStore.dispose({
         flush: conversationPersistenceEnabled
@@ -2457,17 +2443,18 @@ onBeforeUnmount(() => {
     :module="workspaceFeatureModule"
     :left-collapsed="leftCollapsed"
     @back="featureHost.closeSettings"
-    @update-permission-mode="updatePermissionMode"
+    @update-permission-mode="settingsRuntime.updatePermissionMode"
     @update-auto-approve-cross-stage-operations="
-      updateAutoApproveCrossStageOperations
+      settingsRuntime.updateAutoApproveCrossStageOperations
     "
-    @update-auto-save="updateEditorAutoSave"
-    @update-language="updateAppLanguage"
-    @update-show-context-usage="updateShowContextUsage"
-    @update-show-in-menu-bar="updateShowInMenuBar"
-    @update-use-network-proxy="updateUseNetworkProxy"
-    @update-workspace-pane-layout="updateWorkspacePaneLayout"
-    @update-default-text-view-mode="updateDefaultTextViewMode"
+    @update-auto-save="settingsRuntime.updateAutoSave"
+    @update-language="settingsRuntime.updateLanguage"
+    @update-show-context-usage="settingsRuntime.updateShowContextUsage"
+    @update-show-in-menu-bar="settingsRuntime.updateShowInMenuBar"
+    @update-use-network-proxy="settingsRuntime.updateUseNetworkProxy"
+    @update-web-service="settingsRuntime.updateWebService($event)"
+    @update-workspace-pane-layout="settingsRuntime.updateWorkspacePaneLayout"
+    @update-default-text-view-mode="settingsRuntime.updateDefaultTextViewMode"
     @save-workspace-agents="saveWorkspaceAgentSettings"
     @retry-long-agents="loadLongAgentSettings"
     @save-long-agents="saveLongAgentSettings"

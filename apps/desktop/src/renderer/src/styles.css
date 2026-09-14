@@ -1427,7 +1427,7 @@ html[data-platform="darwin"] .conversation-header {
 }
 
 .message.is-empty-error {
-  display: none;
+  display: block;
 }
 
 .message-copy {
@@ -1451,6 +1451,14 @@ html[data-platform="darwin"] .conversation-header {
   50% {
     opacity: 0;
   }
+}
+
+.message-error-copy {
+  margin-top: 9px;
+  color: var(--danger-text, #c0392b);
+  font-size: 0.785714rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .message-stopped-copy {

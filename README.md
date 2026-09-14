@@ -80,6 +80,46 @@ DeepWrite 支持：
 
 ![学习仿写界面](./docs/images/style-learning.png)
 
+### 用浏览器访问写作空间（Web 服务模式）
+
+在“设置 → 通用 → Web 服务”中开启“浏览器访问”后，DeepWrite 会在本机 `127.0.0.1`（默认端口 `8742`）启动一个 Web 服务：同一台电脑上的浏览器打开界面中显示的地址，即可使用与桌面端一致的完整写作空间，两端共享同一份本地作品与模型配置。
+
+- 服务仅绑定本机回环地址，不对局域网开放，当前版本未内置鉴权，请勿将端口转发到外网。
+- 运行中修改端口需先关闭服务；端口被占用时，状态栏会提示更换端口。
+- 嵌入桌面模式中，选择工作目录、导出正文等依赖系统对话框的操作会在桌面端弹出；standalone 模式没有 Electron 对话框，请用 `--workspace-dir` 指定工作目录，系统文件导入/导出操作不可用。
+
+若不需要启动 Electron 窗口，可直接启动独立 Web 服务：
+
+```bash
+pnpm build
+pnpm web
+```
+
+也可以指定端口、独立数据目录和初始工作目录：
+
+```bash
+pnpm web -- --port 8742 --data-dir ./deepwrite-web-data --workspace-dir ./workspace
+```
+
+独立模式使用 Node 进程与 `child_process.fork` 管理 Core、Agent、Tool 三个 Utility，不依赖 Electron。默认数据目录为系统配置目录下的 `DeepWrite Web`；localhost 访问不需要 secret。standalone 使用独立的 Node AES-GCM 凭据存储，与 Electron 的系统安全存储不共享，设置 `DEEPWRITE_WEB_SECRET` 可在不同机器或数据目录间保持独立模式的模型/市场凭据可迁移。
+
+### Docker 部署
+
+仓库提供 `Dockerfile.web` 与 `docker-compose.web.yml`。在 YC8G 或其他 Linux Docker 主机上执行：
+
+```bash
+docker compose -f docker-compose.web.yml up -d --build
+docker compose -f docker-compose.web.yml ps
+```
+
+Compose 默认只将容器端口映射到主机 `127.0.0.1:8742`。从本地电脑访问时建立 SSH 隧道，再打开 `http://localhost:8742/`：
+
+```bash
+ssh -p <ssh-port> -L 8742:127.0.0.1:8742 <user>@<yc8g-host>
+```
+
+不要直接把该无鉴权服务映射到公网；如需公网访问，应在前置反向代理中增加鉴权和 HTTPS。
+
 ## 安装与使用
 
 ### 使用安装包

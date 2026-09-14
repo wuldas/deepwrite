@@ -1,3 +1,4 @@
+
 import {
   ModelConfigInputSchema,
   ModelSettingsInputSchema,
@@ -7,6 +8,8 @@ import {
   type ModelSettings,
   type ModelSettingsInput
 } from "@deepwrite/contracts";
+import { electronSecureStorage } from "./electron-secure-storage";
+import type { SecureStorage } from "./secure-storage";
 import {
   DeepWriteFreeModelCatalogStore,
   type DeepWriteFreeModelCatalog
@@ -55,6 +58,7 @@ export interface ModelConfigStoreOptions {
   appVersion?: string;
   freeModelCatalog?: FreeModelCatalogReader;
   officialModelCatalog?: OfficialModelCatalogReader;
+  secureStorage?: SecureStorage;
 }
 
 interface CatalogRefreshOptions {
@@ -73,12 +77,14 @@ function publicSettings(state: ModelConfigSnapshot): ModelSettings {
 
 export class ModelConfigStore {
   private readonly persistence: ModelConfigPersistence;
+  private readonly secureStorage: SecureStorage;
   private readonly freeModelCatalog: FreeModelCatalogReader;
   private readonly officialModelCatalog: OfficialModelCatalogReader;
   private writeChain: Promise<void> = Promise.resolve();
 
   constructor(userDataPath: string, options: ModelConfigStoreOptions = {}) {
     this.persistence = new ModelConfigPersistence(userDataPath);
+    this.secureStorage = options.secureStorage ?? electronSecureStorage;
     this.freeModelCatalog =
       options.freeModelCatalog ??
       new DeepWriteFreeModelCatalogStore(
@@ -116,7 +122,9 @@ export class ModelConfigStore {
     }
     await this.writeChain;
     const { secrets } = await this.persistence.read();
-    return this.officialModelCatalog.queryBalance(officialTokenSuffix(secrets));
+    return this.officialModelCatalog.queryBalance(
+      officialTokenSuffix(secrets, this.secureStorage)
+    );
   }
 
   async saveOfficialToken(rawApiKey: string): Promise<ModelSettings> {
@@ -124,13 +132,17 @@ export class ModelConfigStore {
     if (!apiKey) throw new Error("请输入官方令牌。");
     if (apiKey.length > 16_000) throw new Error("官方令牌长度超过限制。");
     return publicSettings(
-      await this.update({}, (state) => changeOfficialToken(state, apiKey))
+      await this.update({}, (state) =>
+        changeOfficialToken(state, apiKey, this.secureStorage)
+      )
     );
   }
 
   async clearOfficialToken(): Promise<ModelSettings> {
     return publicSettings(
-      await this.update({}, (state) => changeOfficialToken(state, null))
+      await this.update({}, (state) =>
+        changeOfficialToken(state, null, this.secureStorage)
+      )
     );
   }
 
@@ -159,21 +171,23 @@ export class ModelConfigStore {
   async save(rawInput: ModelSettingsInput): Promise<ModelSettings> {
     const input = ModelSettingsInputSchema.parse(rawInput);
     return publicSettings(
-      await this.update({}, (state) => editModelSettings(input, state))
+      await this.update({}, (state) =>
+        editModelSettings(input, state, this.secureStorage)
+      )
     );
   }
 
   async resolve(
     modelId?: string
   ): Promise<AgentProviderRuntimeConfig | undefined> {
-    return resolveSavedModel(await this.update(), modelId);
+    return resolveSavedModel(await this.update(), modelId, this.secureStorage);
   }
 
   async resolveDraft(
     rawModel: ModelConfigInput
   ): Promise<AgentProviderRuntimeConfig> {
     const model = ModelConfigInputSchema.parse(rawModel);
-    return resolveDraftModel(model, await this.update());
+    return resolveDraftModel(model, await this.update(), this.secureStorage);
   }
 
   async resolveDraftApiKey(input: {
@@ -186,7 +200,10 @@ export class ModelConfigStore {
     if (input.clearApiKey || !input.id?.trim()) return "";
     await this.writeChain;
     const { secrets } = await this.persistence.read();
-    return decryptModelKey(secrets.encryptedApiKeys[input.id.trim()]);
+    return decryptModelKey(
+      secrets.encryptedApiKeys[input.id.trim()],
+      this.secureStorage
+    );
   }
 
   private async update(
@@ -207,7 +224,11 @@ export class ModelConfigStore {
         ...stored,
         freeCatalog,
         officialCatalog,
-        secrets: withDeepWriteFreeApiKeys(freeCatalog, stored.secrets)
+        secrets: withDeepWriteFreeApiKeys(
+          freeCatalog,
+          stored.secrets,
+          this.secureStorage
+        )
       };
       const requested = mutate ? mutate(prepared) : prepared;
       const [settings, secrets] = synchronizeState(

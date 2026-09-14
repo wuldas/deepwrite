@@ -184,6 +184,13 @@ onBeforeUnmount(() => {
         <div v-if="message.status === 'stopped'" class="message-stopped-copy">
           已停止生成
         </div>
+        <div
+          v-if="message.status === 'error' && message.errorMessage"
+          class="message-error-copy"
+          role="alert"
+        >
+          {{ message.errorMessage }}
+        </div>
         <section
           v-if="
             message.role === 'assistant' &&

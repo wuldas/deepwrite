@@ -1,4 +1,3 @@
-import { utilityProcess, type UtilityProcess } from "electron";
 import { join } from "node:path";
 import {
   UtilityInternalCommandResultMessageSchema,
@@ -12,6 +11,10 @@ import {
   type UtilityWorkerName
 } from "@deepwrite/contracts";
 import { createId, nowIso } from "@deepwrite/shared";
+import type {
+  UtilityProcessAdapter,
+  UtilityProcessFactory
+} from "./utility-process-adapter";
 
 type WorkerStatus = UtilityHealthPayload["status"];
 
@@ -66,6 +69,8 @@ export type UtilityInternalCommandAuthorizationResult =
     };
 
 export interface UtilitySupervisorOptions {
+  processFactory: UtilityProcessFactory;
+  utilityEntryDirectory?: string;
   onUtilityEvent(event: SystemEventEnvelope, worker: UtilityWorkerName): void;
   onUnexpectedExit(worker: UtilityWorkerName, reason: string): void;
   onWorkerRestarted(worker: UtilityWorkerName, reason: string): void;
@@ -85,7 +90,7 @@ export interface UtilitySupervisorOptions {
 }
 
 class UtilityWorker {
-  private child: UtilityProcess | undefined;
+  private child: UtilityProcessAdapter | undefined;
   private status: WorkerStatus = "stopped";
   private pid: number | undefined;
   private startedAt: string | undefined;
@@ -98,6 +103,7 @@ class UtilityWorker {
   constructor(
     private readonly name: UtilityWorkerName,
     private readonly entryPath: string,
+    private readonly processFactory: UtilityProcessFactory,
     private readonly onUnexpectedExit: (
       worker: UtilityWorkerName,
       reason: string
@@ -120,15 +126,12 @@ class UtilityWorker {
     }
 
     this.status = "starting";
-    const child = utilityProcess.fork(this.entryPath, [], {
-      serviceName: `deepwrite-${this.name}`,
-      env: { ...process.env }
-    });
+    const child = this.processFactory(this.entryPath, this.name);
     this.child = child;
     this.pid = child.pid;
 
-    child.on("message", (message: unknown) => this.handleMessage(message));
-    child.once("exit", (code) => {
+    child.onMessage((message: unknown) => this.handleMessage(message));
+    child.onExit((code) => {
       const unexpected = !this.isStopping;
       const reason = `exit:${code ?? "unknown"}`;
       this.child = undefined;
@@ -465,7 +468,11 @@ export class UtilitySupervisor {
     const makeWorker = (name: UtilityWorkerName): UtilityWorker =>
       new UtilityWorker(
         name,
-        join(__dirname, "utilities", `${name}-entry.js`),
+        join(
+          options.utilityEntryDirectory ?? join(__dirname, "utilities"),
+          `${name}-entry.js`
+        ),
+        options.processFactory,
         (worker, reason) => this.handleUnexpectedExit(worker, reason),
         (worker) => this.handleWorkerReady(worker),
         options.onUtilityEvent,

@@ -10,6 +10,7 @@ import { useModelSettingsDraft } from "../composables/useModelSettingsDraft";
 import AppIcon from "./AppIcon.vue";
 import ModelAdvancedConfigDialog from "./ModelAdvancedConfigDialog.vue";
 import ModelEditorPanel from "./ModelEditorPanel.vue";
+import ProviderManagementPanel from "./ProviderManagementPanel.vue";
 import { thinkingLabel } from "./modelSettingsDraft";
 
 const props = withDefaults(
@@ -70,6 +71,21 @@ const {
 </script>
 
 <template>
+  <ProviderManagementPanel
+    v-if="modelScope === 'custom'"
+    :active="active"
+    model-scope="custom"
+    :model-settings="modelSettings"
+    :model-loading="modelLoading"
+    :model-saving="modelSaving"
+    :model-error="modelError"
+    :model-test-message="modelTestMessage"
+    :testing-model-id="testingModelId"
+    @save-models="emit('saveModels', $event)"
+    @test-model="emit('testModel', $event)"
+  />
+
+  <template v-else>
   <section
     class="workspace-settings-panel is-model-config"
     :class="{ 'is-embedded': embedded }"
@@ -103,16 +119,11 @@ const {
         <div v-if="modelLoading" class="dialog-note">正在读取模型配置…</div>
         <template v-else>
           <div v-if="draftModels.length === 0" class="model-empty-state">
-            <strong>{{
-              modelScope === "custom"
-                ? "尚未配置自定义模型"
-                : "尚未配置真实模型"
-            }}</strong>
-            <span>{{
-              modelScope === "custom"
-                ? "添加自定义模型后，可在这里测试连接、维护密钥并设为全局默认模型。"
-                : "当前对话继续使用 DeepWrite Faux。添加模型并设为默认后，新的请求会走真实 Provider。"
-            }}</span>
+            <strong>尚未配置真实模型</strong>
+            <span>
+              当前对话继续使用 DeepWrite Faux。添加模型并设为默认后，新的请求会走真实
+              Provider。
+            </span>
           </div>
 
           <template v-for="row in modelConfigRows" :key="row.key">
@@ -238,4 +249,5 @@ const {
     @close="closeAdvancedConfig"
     @save="saveAdvancedConfig"
   />
+  </template>
 </template>

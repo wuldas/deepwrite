@@ -80,6 +80,46 @@ Style learning analyzes reference text in stages, extracts reusable writing trai
 
 ![Style learning interface](./docs/images/style-learning.png)
 
+### Access the workspace in a browser (Web service mode)
+
+Enable **Settings → General → Web service → Browser access** to start a loopback Web service on `127.0.0.1` (port `8742` by default). Open the displayed address in a browser on the same computer to use the same full writing workspace; the browser and desktop client share local works and model configuration.
+
+- The service binds only to the local loopback address and has no built-in authentication in this version. Do not forward the port to the network or Internet.
+- Stop the service before changing its port. If the port is occupied, choose another port after disabling the service.
+- In embedded desktop mode, operations that require native file dialogs run on the desktop client. Standalone mode has no Electron dialogs; use `--workspace-dir` to select the workspace, and native file import/export operations are unavailable.
+
+To run the web service without opening an Electron window:
+
+```bash
+pnpm build
+pnpm web
+```
+
+The entry accepts `--port`, `--data-dir`, and `--workspace-dir`, for example:
+
+```bash
+pnpm web -- --port 8742 --data-dir ./deepwrite-web-data --workspace-dir ./workspace
+```
+
+Standalone mode uses a Node process and `child_process.fork` for the Core, Agent, and Tool utilities. It does not depend on Electron. The default data directory is `DeepWrite Web` under the platform configuration directory; localhost access does not require a secret. Standalone uses its own Node AES-GCM credential store rather than Electron's system store; set `DEEPWRITE_WEB_SECRET` to keep standalone model and marketplace credentials portable across machines or data directories.
+
+### Docker deployment
+
+The repository includes `Dockerfile.web` and `docker-compose.web.yml`. On YC8G or another Linux Docker host:
+
+```bash
+docker compose -f docker-compose.web.yml up -d --build
+docker compose -f docker-compose.web.yml ps
+```
+
+Compose maps the container to host `127.0.0.1:8742` by default. From a local computer, create an SSH tunnel and open `http://localhost:8742/`:
+
+```bash
+ssh -p <ssh-port> -L 8742:127.0.0.1:8742 <user>@<yc8g-host>
+```
+
+Do not map this unauthenticated service directly to the public Internet. Add authentication and HTTPS in a reverse proxy if public access is required.
+
 ## Installation and Setup
 
 ### Use an installer

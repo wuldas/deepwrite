@@ -43,7 +43,7 @@ describe("SettingsPage", () => {
       "settingsStore.generalSettings.showContextUsage"
     );
     expect(appSource).toContain(
-      '@update-show-context-usage="updateShowContextUsage"'
+      '@update-show-context-usage="settingsRuntime.updateShowContextUsage"'
     );
   });
 
@@ -107,7 +107,7 @@ describe("SettingsPage", () => {
       "settingsStore.generalSettings.useNetworkProxy"
     );
     expect(appSource).toContain(
-      '@update-use-network-proxy="updateUseNetworkProxy"'
+      '@update-use-network-proxy="settingsRuntime.updateUseNetworkProxy"'
     );
   });
 
@@ -149,7 +149,7 @@ describe("SettingsPage", () => {
       "settingsStore.generalSettings.defaultTextViewMode"
     );
     expect(appSource).toContain(
-      '@update-default-text-view-mode="updateDefaultTextViewMode"'
+      '@update-default-text-view-mode="settingsRuntime.updateDefaultTextViewMode"'
     );
   });
 
@@ -206,7 +206,7 @@ describe("SettingsPage", () => {
       '{ id: "free-models", label: "免费模型"'
     );
     const customModelsIndex = source.indexOf(
-      '{ id: "custom-models", label: "自定义模型配置"'
+      '{ id: "custom-models", label: "自定义供应商配置"'
     );
     const officialModelsIndex = source.indexOf(
       '{ id: "official-models", label: "旧官方小站模型"'

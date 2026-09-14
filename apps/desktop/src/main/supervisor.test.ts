@@ -18,6 +18,7 @@ vi.mock("electron", () => ({
 }));
 
 import { UtilitySupervisor, type UtilitySupervisorOptions } from "./supervisor";
+import { spawnElectronUtilityProcess } from "./electron-utility-process";
 
 class FakeUtilityProcess extends EventEmitter {
   readonly posted: unknown[] = [];
@@ -115,6 +116,7 @@ describe("UtilitySupervisor internal command bridge", () => {
     internalCommandAuthorize?: UtilitySupervisorOptions["internalCommandAuthorize"]
   ): UtilitySupervisor {
     const supervisor = new UtilitySupervisor({
+      processFactory: spawnElectronUtilityProcess,
       onUtilityEvent: vi.fn(),
       onUnexpectedExit: vi.fn(),
       onWorkerRestarted: vi.fn(),

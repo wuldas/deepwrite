@@ -18,6 +18,8 @@ export function buildSettingsFeatureModule(
     useNetworkProxy: settingsStore.generalSettings.useNetworkProxy,
     workspacePaneLayout: settingsStore.generalSettings.workspacePaneLayout,
     defaultTextViewMode: settingsStore.generalSettings.defaultTextViewMode,
+    webService: settingsStore.generalSettings.webService,
+    webServiceStatus: settingsStore.webServiceStatus,
     workspaceAgentSettings: settingsStore.workspaceAgentSettings,
     creativePlotStages: options.catalogSnapshot.value?.creativePlotStages ?? [],
     longAgentSettings: settingsStore.longAgentSettings,

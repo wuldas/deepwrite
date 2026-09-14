@@ -76,15 +76,40 @@ function rejectedCommandResult(
   };
 }
 
+interface UtilityMessagePort {
+  postMessage(message: unknown): void;
+  onMessage(listener: (message: unknown) => void): void;
+}
+
+type NodeIpcSerializable = string | object | number | boolean | bigint;
+
+function getUtilityMessagePort(): UtilityMessagePort | undefined {
+  const electronPort = process.parentPort;
+  if (electronPort) {
+    return {
+      postMessage: (message) => electronPort.postMessage(message),
+      onMessage: (listener) => electronPort.on("message", listener)
+    };
+  }
+  if (!process.send) return undefined;
+  return {
+    postMessage: (message) => {
+      if (!process.send) {
+        throw new Error("Utility process IPC channel is disconnected.");
+      }
+      process.send(message as NodeIpcSerializable);
+    },
+    onMessage: (listener) => process.on("message", listener)
+  };
+}
+
 export function bootUtility(
   worker: UtilityWorkerName,
   options: UtilityRuntimeOptions = {}
 ): void {
-  const port = process.parentPort;
+  const port = getUtilityMessagePort();
   if (!port) {
-    throw new Error(
-      `${worker} utility requires Electron utilityProcess parentPort.`
-    );
+    throw new Error(`${worker} utility requires a parent IPC channel.`);
   }
 
   const activeCommands = new Set<Promise<void>>();
@@ -320,7 +345,7 @@ export function bootUtility(
     }
   };
 
-  port.on("message", (message: unknown) => {
+  port.onMessage((message: unknown) => {
     const raw = unwrapMessage(message);
     const parsed = UtilityInboundMessageSchema.safeParse(raw);
 

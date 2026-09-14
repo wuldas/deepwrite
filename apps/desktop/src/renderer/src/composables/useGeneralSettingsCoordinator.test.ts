@@ -66,11 +66,13 @@ function harness(
       : (overrides.api ?? {
           list: vi.fn(async () => ({
             persisted: true,
-            settings: createDefaultGeneralSettings()
+            settings: createDefaultGeneralSettings(),
+            webServiceStatus: { running: false, url: null, error: null }
           })),
           save: vi.fn(async () => ({
             persisted: true,
-            settings: createDefaultGeneralSettings()
+            settings: createDefaultGeneralSettings(),
+            webServiceStatus: { running: false, url: null, error: null }
           }))
         });
   const coordinator = useGeneralSettingsCoordinator({
@@ -119,11 +121,13 @@ describe("general settings coordinator", () => {
     const api = {
       list: vi.fn(async () => ({
         persisted: false,
-        settings: { ...createDefaultGeneralSettings(), autoSave: false }
+        settings: { ...createDefaultGeneralSettings(), autoSave: false },
+        webServiceStatus: { running: false, url: null, error: null }
       })),
       save: vi.fn(async () => ({
         persisted: true,
-        settings: createDefaultGeneralSettings()
+        settings: createDefaultGeneralSettings(),
+        webServiceStatus: { running: false, url: null, error: null }
       }))
     };
     const { coordinator, settings } = harness({ api, legacyAutoSave: true });
@@ -144,7 +148,11 @@ describe("general settings coordinator", () => {
       list: vi.fn(),
       save: vi.fn(async (value: GeneralSettings) => {
         snapshots.push(value);
-        return { persisted: true, settings: value };
+        return {
+          persisted: true,
+          settings: value,
+          webServiceStatus: { running: false, url: null, error: null }
+        };
       })
     };
     const { coordinator } = harness({ api });
@@ -185,12 +193,18 @@ describe("general settings coordinator", () => {
     const pending = deferred<{
       persisted: boolean;
       settings: GeneralSettings;
+      webServiceStatus: {
+        running: boolean;
+        url: string | null;
+        error: string | null;
+      };
     }>();
     const api = {
       list: vi.fn(() => pending.promise),
       save: vi.fn(async (value: GeneralSettings) => ({
         persisted: true,
-        settings: value
+        settings: value,
+        webServiceStatus: { running: false, url: null, error: null }
       }))
     };
     const { coordinator, publishLoaded, settings } = harness({ api });
@@ -208,7 +222,8 @@ describe("general settings coordinator", () => {
         autoSave: false,
         language: "auto",
         showInMenuBar: true
-      }
+      },
+      webServiceStatus: { running: false, url: null, error: null }
     });
     await loading;
     await coordinator.drain();

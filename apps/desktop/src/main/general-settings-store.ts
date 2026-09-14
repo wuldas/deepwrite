@@ -87,7 +87,8 @@ export class GeneralSettingsStore {
         showContextUsage: candidate.showContextUsage,
         useNetworkProxy: candidate.useNetworkProxy,
         workspacePaneLayout: candidate.workspacePaneLayout,
-        defaultTextViewMode: candidate.defaultTextViewMode
+        defaultTextViewMode: candidate.defaultTextViewMode,
+        webService: candidate.webService
       });
       if (!parsed.success) {
         return GeneralSettingsSnapshotSchema.parse({

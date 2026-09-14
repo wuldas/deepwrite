@@ -672,12 +672,18 @@ function createDeferredApi(): {
             showContextUsage: true,
             useNetworkProxy: false,
             workspacePaneLayout: "agent-editor" as const,
-            defaultTextViewMode: "edit" as const
-          }
+            defaultTextViewMode: "edit" as const,
+            webService: { enabled: false, port: 8742 }
+          },
+          webServiceStatus: { running: false, url: null, error: null }
         };
       },
       async save(settings) {
-        return { persisted: true, settings };
+        return {
+          persisted: true,
+          settings,
+          webServiceStatus: { running: false, url: null, error: null }
+        };
       }
     },
     manuscript: {

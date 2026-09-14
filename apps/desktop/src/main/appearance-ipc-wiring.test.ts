@@ -24,7 +24,7 @@ describe("appearance IPC wiring", () => {
   });
 
   it("uses one preload appearance API from both entry points", () => {
-    const preloadSource = source("../preload/index.ts");
+    const preloadSource = source("../preload/api-object.ts");
     const settingsApiSource = source("../preload/settings-api.ts");
 
     expect(preloadSource).toContain(

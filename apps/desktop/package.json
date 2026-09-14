@@ -8,8 +8,9 @@
   "scripts": {
     "predev": "node ../../tools/ensure-electron-runtime.mjs",
     "dev": "node ../../tools/run-desktop-dev.mjs",
-    "build": "electron-vite build && node ../../tools/check-renderer-build.mjs",
+    "build": "electron-vite build && node ../../tools/build-web-bridge.mjs && node ../../tools/check-renderer-build.mjs",
     "prepreview": "node ../../tools/ensure-electron-runtime.mjs",
+    "web": "node out/main/web-service.js",
     "preview": "electron-vite preview",
     "presmoke": "node ../../tools/ensure-electron-runtime.mjs",
     "smoke": "node scripts/electron-smoke.mjs"

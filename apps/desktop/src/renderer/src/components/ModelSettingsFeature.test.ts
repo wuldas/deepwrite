@@ -7,6 +7,9 @@ import draftSource from "../composables/useModelSettingsDraft.ts?raw";
 import editorLogicSource from "../composables/useModelEditor.ts?raw";
 import remoteListingSource from "../composables/useRemoteModelListing.ts?raw";
 import modelDraftSource from "./modelSettingsDraft.ts?raw";
+import providerPanelSource from "./ProviderManagementPanel.vue?raw";
+import providerGroupsSource from "../composables/useProviderGroups.ts?raw";
+import providerEditorDialogSource from "./ProviderEditorDialog.vue?raw";
 import {
   applyProviderPresetDefaults,
   MODEL_PROVIDER_OPTIONS
@@ -19,8 +22,13 @@ const source = [
   draftSource,
   editorLogicSource,
   remoteListingSource,
-  modelDraftSource
+  modelDraftSource,
+  providerPanelSource,
+  providerGroupsSource,
+  providerEditorDialogSource
 ].join("\n");
+
+const providerPanelOnlySource = providerPanelSource;
 
 function providerPresetTarget(): Parameters<
   typeof applyProviderPresetDefaults
@@ -249,9 +257,21 @@ describe("ModelSettingsFeature model draft lifecycle", () => {
     expect(source).toContain('props.modelScope === "all" || !model.managedBy');
     expect(providerLabel("deepwrite-free")).toBeUndefined();
     expectSourceToContain(
-      source,
-      'modelScope === "custom" ? "尚未配置自定义模型"'
+      providerPanelOnlySource,
+      "尚未配置自定义供应商"
     );
+  });
+
+  it("renders the provider management surface in custom scope", () => {
+    expect(featureSource).toContain(`v-if="modelScope === 'custom'"`);
+    expect(providerPanelOnlySource).toContain("新增供应商");
+    expect(providerPanelOnlySource).toContain("编辑供应商");
+    expect(providerPanelOnlySource).toContain("获取模型");
+    expect(providerPanelOnlySource).toContain("groupProviderModels");
+    expect(providerPanelOnlySource).toContain("mergeRemoteProviderModels");
+    expect(providerPanelOnlySource).toContain("applyProviderConnection");
+    expect(providerPanelOnlySource).toContain("removeProviderModels");
+    expect(providerPanelOnlySource).toContain("window.deepwrite.models.listRemote({");
   });
 
   it("merges custom drafts with hidden managed models before saving", () => {

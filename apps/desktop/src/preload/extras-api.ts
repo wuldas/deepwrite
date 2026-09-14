@@ -1,4 +1,3 @@
-import { ipcRenderer } from "electron";
 import {
   APP_ALERT_ACKNOWLEDGE_DESKTOP_CHANNEL,
   APP_ALERT_GET_CHANNEL,
@@ -51,7 +50,12 @@ import {
   type UpdateState
 } from "@deepwrite/contracts";
 
-import { browserId, invokeCommand } from "./invoke";
+import {
+  browserId,
+  invokeChannel,
+  invokeCommand,
+  onChannelEvent
+} from "./invoke";
 
 export async function loadConversationPersistence(
   rawKey: string
@@ -96,30 +100,24 @@ export async function removeConversationPersistence(
 }
 
 export async function getUpdateState(): Promise<UpdateState> {
-  return UpdateStateSchema.parse(
-    await ipcRenderer.invoke(UPDATE_GET_STATE_CHANNEL)
-  );
+  return UpdateStateSchema.parse(await invokeChannel(UPDATE_GET_STATE_CHANNEL));
 }
 
 export async function checkForUpdates(): Promise<UpdateState> {
-  return UpdateStateSchema.parse(
-    await ipcRenderer.invoke(UPDATE_CHECK_CHANNEL)
-  );
+  return UpdateStateSchema.parse(await invokeChannel(UPDATE_CHECK_CHANNEL));
 }
 
 export async function downloadUpdate(): Promise<UpdateState> {
-  return UpdateStateSchema.parse(
-    await ipcRenderer.invoke(UPDATE_DOWNLOAD_CHANNEL)
-  );
+  return UpdateStateSchema.parse(await invokeChannel(UPDATE_DOWNLOAD_CHANNEL));
 }
 
 export async function installUpdate(): Promise<void> {
-  await ipcRenderer.invoke(UPDATE_INSTALL_CHANNEL);
+  await invokeChannel(UPDATE_INSTALL_CHANNEL);
 }
 
 export async function getAppAlerts(): Promise<AppAlertSnapshot> {
   return AppAlertSnapshotSchema.parse(
-    await ipcRenderer.invoke(APP_ALERT_GET_CHANNEL)
+    await invokeChannel(APP_ALERT_GET_CHANNEL)
   );
 }
 
@@ -127,23 +125,17 @@ export async function acknowledgeDesktopAlert(
   rawRevision: string
 ): Promise<void> {
   const revision = AppAlertDesktopRevisionSchema.parse(rawRevision);
-  await ipcRenderer.invoke(APP_ALERT_ACKNOWLEDGE_DESKTOP_CHANNEL, revision);
+  await invokeChannel(APP_ALERT_ACKNOWLEDGE_DESKTOP_CHANNEL, revision);
 }
 
 export async function invokeMarketplace(rawRequest: unknown): Promise<unknown> {
   const request = MarketplaceIpcRequestSchema.parse(rawRequest);
-  return ipcRenderer.invoke(
-    MARKETPLACE_IPC_CHANNEL,
-    request
-  ) as Promise<unknown>;
+  return invokeChannel(MARKETPLACE_IPC_CHANNEL, request);
 }
 
 export async function invokeCloudBackup(rawRequest: unknown): Promise<unknown> {
   const request = CloudBackupIpcRequestSchema.parse(rawRequest);
-  return ipcRenderer.invoke(
-    CLOUD_BACKUP_IPC_CHANNEL,
-    request
-  ) as Promise<unknown>;
+  return invokeChannel(CLOUD_BACKUP_IPC_CHANNEL, request);
 }
 
 export const updates: DeepWriteApi["updates"] = {
@@ -152,20 +144,14 @@ export const updates: DeepWriteApi["updates"] = {
   download: downloadUpdate,
   install: installUpdate,
   subscribe(listener: (state: UpdateState) => void): () => void {
-    const handler = (
-      _event: Electron.IpcRendererEvent,
-      rawState: unknown
-    ): void => {
+    return onChannelEvent(UPDATE_STATE_EVENT_CHANNEL, (rawState) => {
       const parsed = UpdateStateSchema.safeParse(rawState);
       if (!parsed.success) {
         console.warn("DeepWrite discarded an invalid update state event.");
         return;
       }
       listener(parsed.data);
-    };
-    ipcRenderer.on(UPDATE_STATE_EVENT_CHANNEL, handler);
-    return () =>
-      ipcRenderer.removeListener(UPDATE_STATE_EVENT_CHANNEL, handler);
+    });
   }
 };
 

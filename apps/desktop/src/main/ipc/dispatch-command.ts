@@ -13,6 +13,7 @@ import { handleModelCommands } from "./model-commands";
 import { handleRendererStateCommands } from "./renderer-state-commands";
 import { handleSessionCommands } from "./session-commands";
 import { handleSettingsCommands } from "./settings-commands";
+import { handleLongBookAnalysisCommands } from "../extras/long-book-analysis/commands";
 
 export async function dispatchCommand(
   ctx: IpcCommandContext,
@@ -37,6 +38,18 @@ export async function dispatchCommand(
       )
     };
   }
+
+  const longBookAnalysisResult = await handleLongBookAnalysisCommands(
+    {
+      dialog: ctx.dialog,
+      getMainWindow: ctx.getMainWindow,
+      configStore: ctx.requireLongBookAnalysisConfigStore,
+      getWorkspaceDirectory: async () =>
+        (await ctx.requireWorkspaceDirectoryStore().list()).path
+    },
+    command
+  );
+  if (longBookAnalysisResult) return longBookAnalysisResult;
 
   const result =
     (await handleManuscriptCommands(ctx, command)) ??

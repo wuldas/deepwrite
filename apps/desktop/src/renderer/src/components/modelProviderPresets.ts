@@ -12,6 +12,15 @@ interface ModelProviderOption {
   description?: string;
   api?: ModelApi;
   baseUrl?: string;
+  /** Providers offered in the domestic (China) quick-pick menu. */
+  domestic?: boolean;
+}
+
+export interface ProviderConnectionPreset {
+  value: string;
+  label: string;
+  api: ModelApi;
+  baseUrl: string;
 }
 
 export const MODEL_PROVIDER_OPTIONS = [
@@ -19,31 +28,43 @@ export const MODEL_PROVIDER_OPTIONS = [
     value: "deepseek",
     label: "DeepSeek",
     api: "openai-completions",
-    baseUrl: "https://api.deepseek.com/v1"
+    baseUrl: "https://api.deepseek.com/v1",
+    domestic: true
   },
   {
     value: "kimi-coding",
     label: "Kimi Coding",
     api: "anthropic-messages",
-    baseUrl: "https://api.kimi.com/coding"
+    baseUrl: "https://api.kimi.com/coding",
+    domestic: true
   },
   {
     value: "minimax-codeplan",
     label: "MiniMax Plan",
     api: "openai-completions",
-    baseUrl: "https://api.minimaxi.com/v1"
+    baseUrl: "https://api.minimaxi.com/v1",
+    domestic: true
   },
   {
     value: "xiaomi-token-plan-cn",
     label: "小米 MiMo TokenPlan（国内）",
     api: "openai-responses",
-    baseUrl: "https://token-plan-cn.xiaomimimo.com/v1"
+    baseUrl: "https://token-plan-cn.xiaomimimo.com/v1",
+    domestic: true
   },
   {
     value: "dashscope",
     label: "阿里云百炼",
     api: "openai-completions",
-    baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    domestic: true
+  },
+  {
+    value: "zai",
+    label: "Z.AI 开放平台（国际站）",
+    api: "openai-completions",
+    baseUrl: "https://api.z.ai/api/paas/v4",
+    domestic: true
   },
   {
     value: "volcengine",
@@ -63,19 +84,36 @@ export const MODEL_PROVIDER_OPTIONS = [
     value: "zai-coding-cn",
     label: "智谱 Z.AI Coding Plan",
     api: "openai-completions",
-    baseUrl: "https://open.bigmodel.cn/api/coding/paas/v4"
+    baseUrl: "https://open.bigmodel.cn/api/coding/paas/v4",
+    domestic: true
   },
   {
     value: "zhipu",
     label: "智谱 GLM 开放平台",
     api: "openai-completions",
-    baseUrl: "https://open.bigmodel.cn/api/paas/v4"
+    baseUrl: "https://open.bigmodel.cn/api/paas/v4",
+    domestic: true
   },
   {
     value: "moonshot",
     label: "Kimi 开放平台",
     api: "openai-completions",
-    baseUrl: "https://api.moonshot.cn/v1"
+    baseUrl: "https://api.moonshot.cn/v1",
+    domestic: true
+  },
+  {
+    value: "siliconflow",
+    label: "硅基流动 SiliconFlow",
+    api: "openai-completions",
+    baseUrl: "https://api.siliconflow.cn/v1",
+    domestic: true
+  },
+  {
+    value: "volc-ark",
+    label: "火山方舟（豆包）",
+    api: "openai-completions",
+    baseUrl: "https://ark.cn-beijing.volces.com/api/v3",
+    domestic: true
   },
   {
     value: "openai",
@@ -117,6 +155,21 @@ export const MODEL_PROVIDER_OPTIONS = [
   },
   { value: "custom", label: "其他兼容服务" }
 ] as const satisfies ReadonlyArray<ModelProviderOption>;
+
+/** Curated domestic providers shown in the quick-add menu. */
+export const DOMESTIC_PROVIDER_PRESETS: ReadonlyArray<ProviderConnectionPreset> =
+  MODEL_PROVIDER_OPTIONS.flatMap((option) => {
+    if (!("domestic" in option) || option.domestic !== true) return [];
+    if (!("api" in option) || !("baseUrl" in option)) return [];
+    return [
+      {
+        value: option.value,
+        label: option.label,
+        api: option.api,
+        baseUrl: option.baseUrl
+      }
+    ];
+  });
 
 export function applyProviderPresetDefaults(
   target: ModelProviderPresetTarget,

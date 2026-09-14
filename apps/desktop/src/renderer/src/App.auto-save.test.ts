@@ -31,7 +31,9 @@ describe("App editor auto-save integration", () => {
     expect(featureModulesSource).toContain(
       ':auto-save-enabled="module.autoSaveEnabled"'
     );
-    expect(source).toContain('@update-auto-save="updateEditorAutoSave"');
+    expect(source).toContain(
+      '@update-auto-save="settingsRuntime.updateAutoSave"'
+    );
     expect(source).toContain(
       "scheduleDirtyDraftAutoSave: scheduleDirtyEditorDraftsForAutoSave"
     );

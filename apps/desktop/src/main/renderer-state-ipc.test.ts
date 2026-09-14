@@ -4,10 +4,17 @@ import { expectSourceToContain } from "../test-utils/sourceText";
 
 describe("renderer state IPC wiring", () => {
   it("exposes an asynchronous conversation persistence API without renderer serialization", () => {
-    const preloadSource = readFileSync(
-      new URL("../preload/conversation-persistence-api.ts", import.meta.url),
-      "utf8"
-    );
+    const preloadSource = [
+      readFileSync(
+        new URL("../preload/extras-api.ts", import.meta.url),
+        "utf8"
+      ),
+      readFileSync(new URL("../preload/api-object.ts", import.meta.url), "utf8"),
+      readFileSync(
+        new URL("../preload/conversation-persistence-api.ts", import.meta.url),
+        "utf8"
+      )
+    ].join("\n");
     const apiContractSource = readFileSync(
       new URL(
         "../../../../packages/contracts/src/preload-api.ts",

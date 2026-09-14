@@ -10,6 +10,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @deepwrite/desktop dev",
+    "web": "pnpm --filter @deepwrite/desktop web",
     "electron:ensure": "node tools/ensure-electron-runtime.mjs",
     "build": "pnpm --filter @deepwrite/desktop build",
     "typecheck": "vue-tsc --noEmit -p apps/desktop/tsconfig.web.json && tsc --noEmit -p apps/desktop/tsconfig.node.json && tsc --noEmit -p packages/contracts/tsconfig.json && tsc --noEmit -p packages/shared/tsconfig.json && tsc --noEmit -p packages/pi-runtime-adapter/tsconfig.json",

@@ -16,7 +16,9 @@ import type {
   SkillLibrary,
   TextViewMode,
   WorkspacePaneLayout,
-  WorkspaceAgentSettings
+  WorkspaceAgentSettings,
+  WebServiceSettings,
+  WebServiceStatus
 } from "@deepwrite/contracts";
 import type { LearningImitationController } from "../composables/useLearningImitation";
 import type { LongBookAnalysisController } from "../extras/long-book-analysis/useLongBookAnalysis";
@@ -34,6 +36,8 @@ export interface SettingsFeatureModule {
   useNetworkProxy: boolean;
   workspacePaneLayout: WorkspacePaneLayout;
   defaultTextViewMode: TextViewMode;
+  webService: WebServiceSettings;
+  webServiceStatus: WebServiceStatus;
   workspaceAgentSettings: readonly WorkspaceAgentSettings[];
   creativePlotStages: readonly CreativePlotStage[];
   longAgentSettings: LongAgentSettings | null;

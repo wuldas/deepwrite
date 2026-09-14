@@ -1,5 +1,6 @@
 export { CloudBackupService, type CloudBackupServiceHooks } from "./service";
 export { registerCloudBackupIpc } from "./ipc";
+export { dispatchCloudBackup } from "./dispatch";
 export { loadCloudBackupOssConfig } from "./config";
 export { formatMachineKey, createMachineKey } from "./identity";
 export { diffBackupItems, countChanges } from "./diff";

@@ -1,4 +1,4 @@
-import { safeStorage } from "electron";
+import type { SecureStorage } from "./secure-storage";
 import type { ModelSettingsInput } from "@deepwrite/contracts";
 import {
   DEEPWRITE_OFFICIAL_TOKEN_SECRET_ID,
@@ -21,7 +21,8 @@ import {
 
 export function editModelSettings(
   input: ModelSettingsInput,
-  { settings, secrets, freeCatalog }: ModelConfigSnapshot
+  { settings, secrets, freeCatalog }: ModelConfigSnapshot,
+  secureStorage: SecureStorage
 ): ModelConfigState {
   const encryptedApiKeys: Record<string, string> = {};
   const preservedIds = [
@@ -36,12 +37,12 @@ export function editModelSettings(
     if (model.managedBy) continue;
     const apiKey = model.apiKey?.trim();
     if (apiKey) {
-      if (!safeStorage.isEncryptionAvailable()) {
+      if (!secureStorage.isEncryptionAvailable()) {
         throw new Error(
           "当前系统安全存储不可用，DeepWrite 不会把 API Key 以明文写入磁盘。"
         );
       }
-      encryptedApiKeys[model.id] = safeStorage
+      encryptedApiKeys[model.id] = secureStorage
         .encryptString(apiKey)
         .toString("base64");
     } else if (!model.clearApiKey && secrets.encryptedApiKeys[model.id]) {
@@ -60,18 +61,19 @@ export function editModelSettings(
 
 export function changeOfficialToken(
   { settings, secrets }: ModelConfigSnapshot,
-  apiKey: string | null
+  apiKey: string | null,
+  secureStorage: SecureStorage
 ): ModelConfigState {
   const encryptedApiKeys = { ...secrets.encryptedApiKeys };
   if (apiKey === null) {
     delete encryptedApiKeys[DEEPWRITE_OFFICIAL_TOKEN_SECRET_ID];
   } else {
-    if (!safeStorage.isEncryptionAvailable()) {
+    if (!secureStorage.isEncryptionAvailable()) {
       throw new Error(
         "当前系统安全存储不可用，DeepWrite 不会把官方令牌以明文写入磁盘。"
       );
     }
-    encryptedApiKeys[DEEPWRITE_OFFICIAL_TOKEN_SECRET_ID] = safeStorage
+    encryptedApiKeys[DEEPWRITE_OFFICIAL_TOKEN_SECRET_ID] = secureStorage
       .encryptString(apiKey)
       .toString("base64");
   }

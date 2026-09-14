@@ -13,6 +13,8 @@ const props = defineProps<{
   editing: boolean;
   saving: boolean;
   testingModelId: string | null;
+  /** Provider-managed mode: connection fields are owned by the provider. */
+  lockProvider?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -70,7 +72,7 @@ watch(fetchHintDialog, (message) => {
           placeholder="例如：DeepSeek 写作"
         />
       </label>
-      <label>
+      <label v-if="!lockProvider">
         <span>Provider</span>
         <PopupSelect
           :model-value="editor.provider"
@@ -114,7 +116,7 @@ watch(fetchHintDialog, (message) => {
           </button>
         </div>
       </label>
-      <label>
+      <label v-if="!lockProvider">
         <span>API 类型</span>
         <PopupSelect
           :model-value="editor.api"
@@ -124,7 +126,7 @@ watch(fetchHintDialog, (message) => {
           @update:model-value="setModelApi"
         />
       </label>
-      <label>
+      <label v-if="!lockProvider">
         <span>API 地址</span>
         <input
           v-model="editor.baseUrl"
@@ -142,7 +144,7 @@ watch(fetchHintDialog, (message) => {
           @update:model-value="setToolSchemaProfile"
         />
       </label>
-      <label class="is-wide">
+      <label v-if="!lockProvider" class="is-wide">
         <span>API Key</span>
         <input
           v-model="editor.apiKey"

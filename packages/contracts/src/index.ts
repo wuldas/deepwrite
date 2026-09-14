@@ -46,6 +46,7 @@ export * from "./update";
 export * from "./workspace";
 export * from "./workspace-directory";
 export * from "./writing-agent-prompts";
+export * from "./web-service";
 export * from "./writing-context";
 
 export * from "./builtin-subagents";

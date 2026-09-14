@@ -1,0 +1,10 @@
+node_modules
+apps/desktop/out
+apps/desktop/release
+dogfood-output
+.git
+.gitignore
+.env
+.env.*
+*.log
+*.tmp

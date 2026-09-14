@@ -7,6 +7,12 @@ import { GeneralSettingsStore } from "./general-settings-store";
 
 const roots: string[] = [];
 
+const stoppedWebServiceStatus = {
+  running: false,
+  url: null,
+  error: null
+};
+
 afterEach(async () => {
   const { rm } = await import("node:fs/promises");
   await Promise.all(
@@ -28,7 +34,8 @@ describe("GeneralSettingsStore", () => {
     const { store } = await createStore();
     await expect(store.list()).resolves.toEqual({
       persisted: false,
-      settings: createDefaultGeneralSettings()
+      settings: createDefaultGeneralSettings(),
+      webServiceStatus: stoppedWebServiceStatus
     });
     expect(createDefaultGeneralSettings()).toMatchObject({
       permissionMode: "auto-approve",
@@ -51,16 +58,19 @@ describe("GeneralSettingsStore", () => {
       showContextUsage: false,
       useNetworkProxy: true,
       workspacePaneLayout: "editor-agent" as const,
-      defaultTextViewMode: "preview" as const
+      defaultTextViewMode: "preview" as const,
+      webService: { enabled: true, port: 9000 }
     };
 
     await expect(store.save(settings)).resolves.toEqual({
       persisted: true,
-      settings
+      settings,
+      webServiceStatus: stoppedWebServiceStatus
     });
     await expect(store.list()).resolves.toEqual({
       persisted: true,
-      settings
+      settings,
+      webServiceStatus: stoppedWebServiceStatus
     });
     expect(
       JSON.parse(
@@ -95,8 +105,10 @@ describe("GeneralSettingsStore", () => {
         showContextUsage: true,
         useNetworkProxy: false,
         workspacePaneLayout: "agent-editor",
-        defaultTextViewMode: "edit"
-      }
+        defaultTextViewMode: "edit",
+        webService: { enabled: false, port: 8742 }
+      },
+      webServiceStatus: stoppedWebServiceStatus
     });
   });
 
@@ -122,7 +134,8 @@ describe("GeneralSettingsStore", () => {
     };
     await expect(store.list()).resolves.toEqual({
       persisted: true,
-      settings: migrated
+      settings: migrated,
+      webServiceStatus: stoppedWebServiceStatus
     });
     expect(JSON.parse(await readFile(store.settingsPath, "utf8"))).toEqual({
       version: 2,
@@ -132,7 +145,8 @@ describe("GeneralSettingsStore", () => {
     await store.save(settings);
     await expect(new GeneralSettingsStore(root).list()).resolves.toEqual({
       persisted: true,
-      settings
+      settings,
+      webServiceStatus: stoppedWebServiceStatus
     });
   });
 
@@ -152,7 +166,8 @@ describe("GeneralSettingsStore", () => {
     await Promise.all([store.list(), store.save(settings)]);
     await expect(new GeneralSettingsStore(root).list()).resolves.toEqual({
       persisted: true,
-      settings
+      settings,
+      webServiceStatus: stoppedWebServiceStatus
     });
   });
 
@@ -174,7 +189,8 @@ describe("GeneralSettingsStore", () => {
 
     await expect(store.list()).resolves.toEqual({
       persisted: false,
-      settings: createDefaultGeneralSettings()
+      settings: createDefaultGeneralSettings(),
+      webServiceStatus: stoppedWebServiceStatus
     });
   });
 
@@ -199,7 +215,8 @@ describe("GeneralSettingsStore", () => {
         ...createDefaultGeneralSettings(),
         permissionMode: "auto-approve",
         autoSave: false
-      }
+      },
+      webServiceStatus: stoppedWebServiceStatus
     });
   });
 });

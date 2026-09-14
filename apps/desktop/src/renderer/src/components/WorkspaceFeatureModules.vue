@@ -57,6 +57,7 @@ const emit = defineEmits<{
   updateShowContextUsage: [enabled: boolean];
   updateShowInMenuBar: [enabled: boolean];
   updateUseNetworkProxy: [enabled: boolean];
+  updateWebService: [patch: { enabled?: boolean; port?: number }];
   updateWorkspacePaneLayout: [layout: WorkspacePaneLayout];
   updateDefaultTextViewMode: [mode: TextViewMode];
   saveWorkspaceAgents: [settings: WorkspaceAgentSettingsInput];
@@ -110,6 +111,8 @@ const emit = defineEmits<{
     :show-in-menu-bar="module.showInMenuBar"
     :use-network-proxy="module.useNetworkProxy"
     :workspace-pane-layout="module.workspacePaneLayout"
+    :web-service="module.webService"
+    :web-service-status="module.webServiceStatus"
     :default-text-view-mode="module.defaultTextViewMode"
     :workspace-agent-settings="module.workspaceAgentSettings"
     :creative-plot-stages="module.creativePlotStages"
@@ -153,7 +156,7 @@ const emit = defineEmits<{
     @update-show-context-usage="emit('updateShowContextUsage', $event)"
     @update-show-in-menu-bar="emit('updateShowInMenuBar', $event)"
     @update-use-network-proxy="emit('updateUseNetworkProxy', $event)"
-    @update-workspace-pane-layout="emit('updateWorkspacePaneLayout', $event)"
+    @update-web-service="emit('updateWebService', $event)"
     @update-default-text-view-mode="emit('updateDefaultTextViewMode', $event)"
     @save-workspace-agents="emit('saveWorkspaceAgents', $event)"
     @retry-long-agents="emit('retryLongAgents')"

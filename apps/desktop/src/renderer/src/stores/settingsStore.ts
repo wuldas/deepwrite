@@ -13,7 +13,8 @@ import type {
   OfficialModelBalance,
   SiteOfficialQuota,
   WorkspaceAgentSettings,
-  WorkspaceDirectorySettings
+  WorkspaceDirectorySettings,
+  WebServiceStatus
 } from "@deepwrite/contracts";
 import {
   DEFAULT_LIBRARY_AGENT_PROFILES,
@@ -95,6 +96,11 @@ export const useSettingsStore = defineStore("settings", () => {
   const generalSettingsLoading = ref(false);
   const generalSettingsSaving = ref(false);
   const generalSettingsLoadError = ref<string | null>(null);
+  const webServiceStatus = shallowRef<WebServiceStatus>({
+    running: false,
+    url: null,
+    error: null
+  });
 
   const modelSettings = shallowRef<ModelSettings | null>(null);
   const modelLoading = ref(false);
@@ -383,6 +389,9 @@ export const useSettingsStore = defineStore("settings", () => {
     state.loading.value = false;
     state.error.value = null;
   }
+  function setWebServiceStatus(status: WebServiceStatus): void {
+    webServiceStatus.value = status;
+  }
 
   function markLoaded<Domain extends SettingsLoadDomain>(
     domain: Domain,
@@ -446,6 +455,8 @@ export const useSettingsStore = defineStore("settings", () => {
   return {
     generalSettings,
     editorAutoSaveEnabled,
+    webServiceStatus,
+    setWebServiceStatus,
     generalSettingsLoaded,
     generalSettingsLoading,
     generalSettingsSaving,

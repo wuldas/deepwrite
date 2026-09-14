@@ -37,7 +37,7 @@ describe("IPC command requestId handling", () => {
       "utf8"
     );
     const preloadSource = readFileSync(
-      new URL("../preload/index.ts", import.meta.url),
+      new URL("../preload/api-object.ts", import.meta.url),
       "utf8"
     );
     const coreSource = readFileSync(
@@ -57,9 +57,6 @@ describe("IPC command requestId handling", () => {
       "command.payload.workspaceContext?.scriptWorkspace"
     );
     expect(mainSource).toContain("creativeWorkspaceType");
-    expect(mainSource).toContain(
-      "creativeWorkspace,\n                creativeWorkspaceType"
-    );
     expect(mainSource).toContain("{ scriptAgentProfile: agentProfile }");
   });
 
@@ -69,7 +66,7 @@ describe("IPC command requestId handling", () => {
       "utf8"
     );
     const preloadSource = readFileSync(
-      new URL("../preload/index.ts", import.meta.url),
+      new URL("../preload/api-object.ts", import.meta.url),
       "utf8"
     );
     const coreSource = readFileSync(
@@ -124,7 +121,11 @@ describe("IPC command requestId handling", () => {
       new URL("./supervisor.ts", import.meta.url),
       "utf8"
     );
-    expect(supervisorSource).toContain("env: { ...process.env }");
+    const electronProcessSource = readFileSync(
+      new URL("./electron-utility-process.ts", import.meta.url),
+      "utf8"
+    );
+    expect(electronProcessSource).toContain("env: { ...process.env }");
     expect(supervisorSource).toContain("async restartWorker(");
   });
 
@@ -166,7 +167,7 @@ describe("IPC command requestId handling", () => {
       "utf8"
     );
     const preloadSource = readFileSync(
-      new URL("../preload/index.ts", import.meta.url),
+      new URL("../preload/api-object.ts", import.meta.url),
       "utf8"
     );
     const apiSource = readFileSync(
