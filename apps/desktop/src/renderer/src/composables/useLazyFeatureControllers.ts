@@ -1,4 +1,5 @@
-import { computed, shallowRef, type ComputedRef, type ShallowRef } from "vue";
+import { useLazyModelFeature } from "./useLazyModelFeature";
+import { shallowRef, type ComputedRef, type ShallowRef } from "vue";
 import type {
   DeepWriteApi,
   ModelConfig,
@@ -62,59 +63,11 @@ export function useLazyLearningImitationController(options: {
   api: () => DeepWriteApi | undefined;
   loadModule?: () => Promise<LearningImitationModule>;
 }): LazyLearningImitationController {
-  const controller = shallowRef<LearningImitationController | null>(null);
-  const isBusy = computed(() => controller.value?.isBusy.value ?? false);
-  let loadPromise: Promise<LearningImitationController> | null = null;
-  let generation = 0;
-  let active = true;
-  let configuredModels: readonly ModelConfig[] = [];
-  let configuredDefaultModelId: string | undefined;
-
-  async function ensureLoaded(): Promise<LearningImitationController> {
-    if (controller.value) return controller.value;
-    if (loadPromise) return await loadPromise;
-    active = true;
-    const loadGeneration = generation;
-    const pending = (async () => {
-      const { useLearningImitation } = await (options.loadModule?.() ??
-        import("./useLearningImitation"));
-      const loaded = useLearningImitation({ api: options.api });
-      loaded.setConfiguredModels(configuredModels, configuredDefaultModelId);
-      if (!active || generation !== loadGeneration) {
-        loaded.dispose();
-        throw cancelledLoadError("Learning imitation");
-      }
-      controller.value = loaded;
-      return loaded;
-    })();
-    loadPromise = pending;
-    try {
-      return await pending;
-    } finally {
-      if (loadPromise === pending) loadPromise = null;
-    }
-  }
-
-  return {
-    controller,
-    isBusy,
-    ensureLoaded,
-    setConfiguredModels(models, defaultModelId) {
-      configuredModels = models;
-      configuredDefaultModelId = defaultModelId;
-      controller.value?.setConfiguredModels(models, defaultModelId);
-    },
-    handleEvent(event) {
-      controller.value?.handleEvent(event);
-    },
-    dispose() {
-      active = false;
-      generation += 1;
-      loadPromise = null;
-      controller.value?.dispose();
-      controller.value = null;
-    }
-  };
+  return useLazyModelFeature("Learning imitation", async () => {
+    const module = await (options.loadModule?.() ??
+      import("./useLearningImitation"));
+    return module.useLearningImitation({ api: options.api });
+  });
 }
 
 export function useLazySubagentAuthoringController(options: {
@@ -168,57 +121,9 @@ export function useLazyLongBookAnalysisController(options: {
   api: () => DeepWriteApi | undefined;
   loadModule?: () => Promise<LongBookAnalysisModule>;
 }): LazyLongBookAnalysisController {
-  const controller = shallowRef<LongBookAnalysisController | null>(null);
-  const isBusy = computed(() => controller.value?.isBusy.value ?? false);
-  let loadPromise: Promise<LongBookAnalysisController> | null = null;
-  let generation = 0;
-  let active = true;
-  let configuredModels: readonly ModelConfig[] = [];
-  let configuredDefaultModelId: string | undefined;
-
-  async function ensureLoaded(): Promise<LongBookAnalysisController> {
-    if (controller.value) return controller.value;
-    if (loadPromise) return await loadPromise;
-    active = true;
-    const loadGeneration = generation;
-    const pending = (async () => {
-      const { useLongBookAnalysis } = await (options.loadModule?.() ??
-        import("../extras/long-book-analysis/useLongBookAnalysis"));
-      const loaded = useLongBookAnalysis({ api: options.api });
-      loaded.setConfiguredModels(configuredModels, configuredDefaultModelId);
-      if (!active || generation !== loadGeneration) {
-        loaded.dispose();
-        throw cancelledLoadError("Long book analysis");
-      }
-      controller.value = loaded;
-      return loaded;
-    })();
-    loadPromise = pending;
-    try {
-      return await pending;
-    } finally {
-      if (loadPromise === pending) loadPromise = null;
-    }
-  }
-
-  return {
-    controller,
-    isBusy,
-    ensureLoaded,
-    setConfiguredModels(models, defaultModelId) {
-      configuredModels = models;
-      configuredDefaultModelId = defaultModelId;
-      controller.value?.setConfiguredModels(models, defaultModelId);
-    },
-    handleEvent(event) {
-      controller.value?.handleEvent(event);
-    },
-    dispose() {
-      active = false;
-      generation += 1;
-      loadPromise = null;
-      controller.value?.dispose();
-      controller.value = null;
-    }
-  };
+  return useLazyModelFeature("Long book analysis", async () => {
+    const module = await (options.loadModule?.() ??
+      import("../extras/long-book-analysis/useLongBookAnalysis"));
+    return module.useLongBookAnalysis({ api: options.api });
+  });
 }

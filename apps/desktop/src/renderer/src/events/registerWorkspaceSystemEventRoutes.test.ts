@@ -18,6 +18,7 @@ function createDependencies(order: string[] = []) {
     learningImitation: {
       handleEvent: vi.fn(() => order.push("learning"))
     },
+    shortBookAnalysis: { handleEvent: vi.fn() },
     longBookAnalysis: {
       handleEvent: vi.fn(() => order.push("long-book-analysis"))
     },

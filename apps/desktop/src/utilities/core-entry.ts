@@ -1,3 +1,4 @@
+import { withShortBookAnalysisSources } from "./short-book-analysis-sources";
 import { handleLongCoreCommand } from "./long-core-commands";
 import { legacyDataRootsFromEnvironment } from "./legacy-data-roots";
 import { withDeviceSyncCommands } from "./device-sync-core";
@@ -543,7 +544,7 @@ bootUtility("core", {
       resolvedUserDataPath,
       requireCatalogStore,
       longWorkspaceService,
-      handleCatalogCommand
+      withShortBookAnalysisSources(handleCatalogCommand)
     )
   )
 });

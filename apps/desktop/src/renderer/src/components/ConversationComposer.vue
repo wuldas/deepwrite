@@ -28,6 +28,8 @@ import AgentTeamModeSelect from "./AgentTeamModeSelect.vue";
 import ContextWindowIndicator from "./ContextWindowIndicator.vue";
 import ConversationModelConfigSelect from "./ConversationModelConfigSelect.vue";
 import PopupSelect from "./PopupSelect.vue";
+import ComposerContextBar from "./ComposerContextBar.vue";
+import ComposerMoreSettings from "./ComposerMoreSettings.vue";
 
 const settingsStore = useSettingsStore();
 
@@ -210,27 +212,12 @@ function handleApprovalChange(value: string | number): void {
       </div>
 
       <div class="composer" :class="{ 'is-disabled': responding }">
-        <div
+        <ComposerContextBar
           v-if="messagesEmpty"
-          class="composer-context-bar"
-          role="group"
-          :aria-label="`当前绑定：书籍 ${bookTitle}，阶段 ${stageLabel}`"
-        >
-          <div
-            class="composer-context-item composer-book-context"
-            :title="`当前书籍：${bookTitle}`"
-          >
-            <AppIcon name="book" :size="16" />
-            <strong>{{ bookTitle }}</strong>
-          </div>
-          <div
-            class="composer-context-item composer-stage-context"
-            :title="`当前阶段：${stageLabel}`"
-          >
-            <AppIcon name="wand" :size="16" />
-            <strong>{{ stageLabel }}</strong>
-          </div>
-        </div>
+          :book-title="bookTitle"
+          :stage-label="stageLabel"
+          :responding="responding"
+        />
         <div class="composer-input-surface">
           <input
             ref="attachmentInput"
@@ -376,33 +363,35 @@ function handleApprovalChange(value: string | number): void {
                 @select-temperature="emit('selectTemperature', $event)"
                 @toggle-web-search="emit('toggleWebSearch', $event)"
               />
-              <ContextWindowIndicator
-                v-if="settingsStore.generalSettings.showContextUsage"
-                :messages="messages"
-                :model="selectedModel"
-              />
             </div>
             <div class="composer-actions">
-              <AgentTeamModeSelect
-                v-if="agentWorkspaceType && agentId"
-                :model-value="agentTeamMode"
-                :workspace-type="agentWorkspaceType"
-                :parent-agent-id="agentId"
-                @update:model-value="emit('selectAgentTeamMode', $event)"
-              />
-              <PopupSelect
-                :model-value="approvalMode"
-                :options="approvalOptions"
-                accessible-label="选择正文修改权限"
-                variant="compact"
-                align="end"
-                :menu-min-width="300"
-                @update:model-value="handleApprovalChange"
-              >
-                <template #prefix
-                  ><AppIcon :name="approvalModeIcon" :size="14"
-                /></template>
-              </PopupSelect>
+              <ComposerMoreSettings>
+                <ContextWindowIndicator
+                  v-if="settingsStore.generalSettings.showContextUsage"
+                  :messages="messages"
+                  :model="selectedModel"
+                />
+                <AgentTeamModeSelect
+                  v-if="agentWorkspaceType && agentId"
+                  :model-value="agentTeamMode"
+                  :workspace-type="agentWorkspaceType"
+                  :parent-agent-id="agentId"
+                  @update:model-value="emit('selectAgentTeamMode', $event)"
+                />
+                <PopupSelect
+                  :model-value="approvalMode"
+                  :options="approvalOptions"
+                  accessible-label="选择正文修改权限"
+                  variant="compact"
+                  align="end"
+                  :menu-min-width="300"
+                  @update:model-value="handleApprovalChange"
+                >
+                  <template #prefix
+                    ><AppIcon :name="approvalModeIcon" :size="14"
+                  /></template>
+                </PopupSelect>
+              </ComposerMoreSettings>
               <button
                 class="round-tool-button"
                 type="button"

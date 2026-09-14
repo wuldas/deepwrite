@@ -1,3 +1,4 @@
+import { validateBookAnalysisProfiles } from "./analysis-profile-validation";
 import { LibraryManagementRuntimeContextSchema } from "../library-management";
 import { z } from "zod";
 import { ShortAgentSubagentDefinitionsSchema } from "../agent-team";
@@ -5,6 +6,7 @@ import type { ChatAssistantRuntimeContext } from "../chat-assistant";
 import { ChatAssistantRequestContextSchema } from "../chat-assistant-base";
 import { EnvelopeBaseSchema } from "../envelope";
 import { LearningImitationAgentProfileSchema } from "../learning-imitation";
+import { ShortBookAnalysisProfileSchema } from "../short-book-analysis";
 import { LongBookAnalysisAgentProfileSchema } from "../long-book-analysis";
 import { LibraryAgentProfileSchema } from "../library-agent";
 import {
@@ -301,6 +303,7 @@ export const AgentPromptCommandPayloadSchema =
       .optional(),
     libraryAgentProfile: LibraryAgentProfileSchema.optional(),
     learningImitationProfile: LearningImitationAgentProfileSchema.optional(),
+    shortBookAnalysisProfile: ShortBookAnalysisProfileSchema.optional(),
     longBookAnalysisProfile: LongBookAnalysisAgentProfileSchema.optional()
   }).superRefine((value, context) => {
     if (value.mode === "chat-assistant") {
@@ -483,28 +486,7 @@ export const AgentPromptCommandPayloadSchema =
         message: "Learning-imitation profile must match the active stage."
       });
     }
-    if (
-      Boolean(value.workspaceContext?.longBookAnalysis) !==
-      Boolean(value.longBookAnalysisProfile)
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["longBookAnalysisProfile"],
-        message:
-          "Long-book analysis context and agent profile must be provided together."
-      });
-    }
-    if (
-      value.longBookAnalysisProfile &&
-      value.workspaceContext?.longBookAnalysis?.presetId !==
-        value.longBookAnalysisProfile.id
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["longBookAnalysisProfile", "id"],
-        message: "Long-book analysis profile must match the active preset."
-      });
-    }
+    validateBookAnalysisProfiles(value, context);
     if (
       Boolean(value.workspaceContext?.libraryWorkspace) !==
       Boolean(value.libraryAgentProfile)

@@ -1,3 +1,4 @@
+import { resolveShortAnalysisProfile } from "../extras/short-book-analysis/run-profile";
 import { acquireConversationOperation } from "./conversation-operation-guard";
 import { resolveAgentTeamRuntime } from "../agent-team-run-mode";
 import { prepareLibraryManagementRunContext } from "../library-management-run-context";
@@ -210,6 +211,14 @@ export async function handleSessionCommands(
             .requireLearningImitationConfigStore()
             .resolve(learningImitation.stageId)
         : undefined;
+      const shortBookAnalysisProfile = command.payload.workspaceContext
+        ?.shortBookAnalysis
+        ? await resolveShortAnalysisProfile(
+            command.payload.workspaceContext.shortBookAnalysis,
+            ctx.requireShortBookAnalysisConfigStore(),
+            runtimeConfig
+          )
+        : undefined;
       const longBookAnalysisProfile = longBookAnalysis
         ? await ctx
             .requireLongBookAnalysisConfigStore()
@@ -276,6 +285,7 @@ export async function handleSessionCommands(
               : {}),
             ...(libraryAgentProfile ? { libraryAgentProfile } : {}),
             ...(learningImitationProfile ? { learningImitationProfile } : {}),
+            ...(shortBookAnalysisProfile ? { shortBookAnalysisProfile } : {}),
             ...(longBookAnalysisProfile ? { longBookAnalysisProfile } : {})
           },
           { id: command.id, context: command.context }

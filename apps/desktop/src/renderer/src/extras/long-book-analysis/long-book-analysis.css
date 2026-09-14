@@ -26,6 +26,7 @@
 
 .long-book-analysis-page .analysis-page-intro {
   min-width: 0;
+  max-width: 100%;
   flex: 1 1 auto;
 }
 
@@ -53,9 +54,12 @@
   > p:last-child {
   max-width: 650px;
   margin: 0;
+  overflow: hidden;
   color: var(--text-secondary);
   font-size: 0.928571rem;
   line-height: 1.55;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .long-book-analysis-page .analysis-page-actions,
@@ -297,9 +301,7 @@
 
 .long-book-analysis-page .setup-grid {
   display: grid;
-  grid-template-columns:
-    minmax(190px, 1.1fr) minmax(190px, 1.1fr) minmax(120px, 0.65fr)
-    minmax(210px, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -461,10 +463,6 @@
   .long-book-analysis-page .analysis-page-header {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .long-book-analysis-page .setup-grid {
-    grid-template-columns: 1fr 1fr;
   }
 
   .long-book-analysis-page .analysis-page-controls {

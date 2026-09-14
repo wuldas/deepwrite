@@ -4,6 +4,7 @@ import { MaterialCatalogContextSchema } from "../material-query";
 import { SHORT_WORKSPACE_FILE_MAX_CHARACTERS } from "../expert-draft";
 import { LongWorkspaceRuntimeContextSchema } from "../long-workspace-api";
 import { LearningImitationRuntimeContextSchema } from "../learning-imitation";
+import { ShortBookAnalysisRuntimeContextSchema } from "../short-book-analysis";
 import { LongBookAnalysisRuntimeContextSchema } from "../long-book-analysis";
 import { StyleComparisonInputSchema } from "../style-comparison";
 import { LibraryAgentWorkspaceSnapshotSchema } from "../library-agent";
@@ -152,6 +153,7 @@ export const WorkspaceRuntimeContextSchema = z
     libraryWorkspace: LibraryAgentWorkspaceSnapshotSchema.optional(),
     learningImitation: LearningImitationRuntimeContextSchema.optional(),
     longBookAnalysis: LongBookAnalysisRuntimeContextSchema.optional(),
+    shortBookAnalysis: ShortBookAnalysisRuntimeContextSchema.optional(),
     styleComparison: StyleComparisonInputSchema.optional(),
     subagentAuthoring: SubagentAuthoringRuntimeContextSchema.optional(),
     attachedSkills: z
@@ -173,6 +175,7 @@ export const WorkspaceRuntimeContextSchema = z
       value.libraryWorkspace,
       value.learningImitation,
       value.longBookAnalysis,
+      value.shortBookAnalysis,
       value.styleComparison,
       value.subagentAuthoring
     ].filter(Boolean).length;

@@ -32,7 +32,7 @@ export const LEFT_PANE_MIN = 220;
 export const LEFT_PANE_MAX = 480;
 export const RIGHT_PANE_MIN = RIGHT_PANE_MIN_WIDTH;
 export const RIGHT_PANE_MAX = RIGHT_PANE_MAX_WIDTH;
-export const CENTER_PANE_MIN_FALLBACK = 420;
+export const CENTER_PANE_MIN_FALLBACK = 320;
 
 function runtimeWindow(): Window | undefined {
   return typeof window === "undefined" ? undefined : window;
@@ -63,8 +63,8 @@ function initialRightPanePreferences(): RightPanePreferences {
 }
 
 export const useLayoutStore = defineStore("layout", () => {
-  const viewportWidth = initialViewportWidth();
-  const initialRightPaneWidth = defaultRightPaneWidth(viewportWidth);
+  const viewportWidth = ref(initialViewportWidth());
+  const initialRightPaneWidth = defaultRightPaneWidth(viewportWidth.value);
 
   const currentView = ref<AppView>("workspace");
   const settingsInitialCategory = ref("general");
@@ -72,7 +72,7 @@ export const useLayoutStore = defineStore("layout", () => {
   const leftCollapsed = ref(false);
   const rightCollapsed = ref(false);
   const desktopShell = shallowRef<HTMLElement | null>(null);
-  const leftPaneWidth = ref(defaultLeftPaneWidth(viewportWidth));
+  const leftPaneWidth = ref(defaultLeftPaneWidth(viewportWidth.value));
   const rightPaneWidth = ref(initialRightPaneWidth);
   const rightPanePreferences = shallowRef<RightPanePreferences>(
     initialRightPanePreferences()
@@ -105,7 +105,7 @@ export const useLayoutStore = defineStore("layout", () => {
   const writingRightPaneViewModel = computed(() => ({
     collapsed: rightCollapsed.value,
     minWidth: RIGHT_PANE_MIN,
-    maxWidth: RIGHT_PANE_MAX,
+    maxWidth: maximumPaneWidth("right"),
     width: rightPaneWidth.value
   }));
 
@@ -151,12 +151,10 @@ export const useLayoutStore = defineStore("layout", () => {
     return Number.isFinite(value) ? value : CENTER_PANE_MIN_FALLBACK;
   }
 
-  function clampPaneWidth(side: PaneSide, width: number): number {
-    const currentWindow = runtimeWindow();
+  function maximumPaneWidth(side: PaneSide): number {
+    const currentViewportWidth = viewportWidth.value;
     const shellWidth =
-      desktopShell.value?.getBoundingClientRect().width ??
-      currentWindow?.innerWidth ??
-      1440;
+      desktopShell.value?.getBoundingClientRect().width ?? currentViewportWidth;
     const otherWidth =
       side === "left"
         ? rightCollapsed.value
@@ -171,8 +169,13 @@ export const useLayoutStore = defineStore("layout", () => {
       paneMin,
       shellWidth - otherWidth - centerPaneMinWidth()
     );
+    return Math.min(paneMax, availableMax);
+  }
+
+  function clampPaneWidth(side: PaneSide, width: number): number {
+    const paneMin = side === "left" ? LEFT_PANE_MIN : RIGHT_PANE_MIN;
     return Math.round(
-      Math.min(Math.max(width, paneMin), paneMax, availableMax)
+      Math.min(Math.max(width, paneMin), maximumPaneWidth(side))
     );
   }
 
@@ -255,6 +258,7 @@ export const useLayoutStore = defineStore("layout", () => {
   }
 
   function reconcilePaneWidths(): void {
+    viewportWidth.value = initialViewportWidth();
     if (!leftCollapsed.value) {
       setPaneWidth("left", leftPaneWidth.value);
     }

@@ -264,9 +264,7 @@ onMounted(() => {
       <div class="analysis-page-intro">
         <p class="analysis-eyebrow">更多功能</p>
         <h1>长篇拆书分析</h1>
-        <p>
-          导入章节，按预设分批提炼剧情、人物与文风，生成可继续编辑的素材或技能。
-        </p>
+        <p>导入长篇，提炼剧情、人物与文风，生成素材或技能。</p>
       </div>
       <AnalysisSourceControls
         :controller="controller"
@@ -314,6 +312,32 @@ onMounted(() => {
           </span>
         </header>
         <div class="setup-grid">
+          <div class="setup-field setup-range-field">
+            <span class="setup-field-label"
+              >章节范围 <small>单次最多 50 章</small></span
+            >
+            <div class="chapter-range-inputs">
+              <input
+                v-model.number="startOrder"
+                type="number"
+                aria-label="起始章节"
+                min="1"
+                :max="source?.chapters.length ?? 1"
+                :disabled="!source || controller.isBusy.value"
+                @change="normalizeRange('start')"
+              />
+              <span>至</span>
+              <input
+                v-model.number="endOrder"
+                type="number"
+                aria-label="结束章节"
+                min="1"
+                :max="source?.chapters.length ?? 1"
+                :disabled="!source || controller.isBusy.value"
+                @change="normalizeRange('end')"
+              />
+            </div>
+          </div>
           <label class="setup-field"
             ><span class="setup-field-label">拆书预设</span
             ><PopupSelect
@@ -341,32 +365,6 @@ onMounted(() => {
               :disabled="controller.isBusy.value || !selectedModel"
               :menu-min-width="180"
           /></label>
-          <div class="setup-field setup-range-field">
-            <span class="setup-field-label"
-              >章节范围 <small>单次最多 50 章</small></span
-            >
-            <div class="chapter-range-inputs">
-              <input
-                v-model.number="startOrder"
-                type="number"
-                aria-label="起始章节"
-                min="1"
-                :max="source?.chapters.length ?? 1"
-                :disabled="!source || controller.isBusy.value"
-                @change="normalizeRange('start')"
-              />
-              <span>至</span>
-              <input
-                v-model.number="endOrder"
-                type="number"
-                aria-label="结束章节"
-                min="1"
-                :max="source?.chapters.length ?? 1"
-                :disabled="!source || controller.isBusy.value"
-                @change="normalizeRange('end')"
-              />
-            </div>
-          </div>
         </div>
         <div v-if="selectedPreset" class="preset-summary">
           <div class="preset-summary-main">

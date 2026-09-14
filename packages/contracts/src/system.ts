@@ -4,6 +4,11 @@ import { DeviceSyncWorkspaceCommandEnvelopeSchema } from "./device-sync-commands
 import { AgentTeamsSaveBuiltinsCommandEnvelopeSchema } from "./builtin-subagents";
 import { CatalogQueryLibraryManagementCommandEnvelopeSchema } from "./library-management";
 import { z } from "zod";
+import {
+  ShortBookAnalysisResultEventSchema,
+  type ShortBookAnalysisResultEvent
+} from "./short-book-analysis-events";
+import { ShortBookAnalysisCommandSchemas } from "./short-book-analysis-commands";
 import { CatalogQueryMaterialsCommandEnvelopeSchema } from "./material-query";
 import {
   ChatAssistantProjectConfigGetCommandEnvelopeSchema,
@@ -302,6 +307,7 @@ export const CommandEnvelopeSchema = z.discriminatedUnion("type", [
   LearningImitationSettingsListCommandEnvelopeSchema,
   LearningImitationSettingsSaveCommandEnvelopeSchema,
   LearningImitationSettingsResetCommandEnvelopeSchema,
+  ...ShortBookAnalysisCommandSchemas,
   LongBookAnalysisChooseSourceCommandEnvelopeSchema,
   LongBookAnalysisListSourcesCommandEnvelopeSchema,
   LongBookAnalysisLoadSourceCommandEnvelopeSchema,
@@ -410,6 +416,7 @@ export const SystemEventEnvelopeSchema = z.discriminatedUnion("type", [
   SubagentActivityEventEnvelopeSchema,
   SubagentCompletedEventEnvelopeSchema,
   LearningImitationResultUpdatedEventEnvelopeSchema,
+  ShortBookAnalysisResultEventSchema,
   LongBookAnalysisNoteUpdatedEventEnvelopeSchema,
   LongBookAnalysisResultUpdatedEventEnvelopeSchema,
   SubagentAuthoringDraftUpdatedEventEnvelopeSchema,
@@ -438,6 +445,7 @@ export type SystemWorkerRestartingEventEnvelope = Envelope<
   "system.worker_restarting"
 >;
 export type SystemEventEnvelope =
+  | ShortBookAnalysisResultEvent
   | z.infer<typeof RendererStateFlushRequestedEventEnvelopeSchema>
   | SystemReadyEventEnvelope
   | SystemWorkerRestartingEventEnvelope

@@ -20,6 +20,14 @@ export type * from "./library-agent";
 export type * from "./long-agent-settings";
 export type * from "./long-agent-team";
 export type * from "./long-book-analysis";
+export type * from "./short-book-analysis";
+export type * from "./short-book-analysis-events";
+export {
+  ShortBookAnalysisPresetSchema,
+  ShortBookAnalysisSettingsInputSchema,
+  ShortBookAnalysisRuntimeContextSchema
+} from "./short-book-analysis";
+export * from "./short-book-analysis-budget";
 export type * from "./style-comparison";
 export {
   STYLE_COMPARISON_TEXT_LIMIT,

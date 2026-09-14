@@ -28,6 +28,7 @@ export class DeviceSyncService implements SyncApi {
   private controller: AbortController | null = null;
   private state: SyncRunState = { progress: IDLE, issues: [] };
   private initialization: Promise<void> | null = null;
+  private lastStatus: SyncStatus | null = null;
   constructor(private readonly options: SyncServiceOptions) {}
   private async metadata(): Promise<SyncMetadata> {
     this.initialization ??= loadSyncMetadata(this.options)
@@ -41,11 +42,14 @@ export class DeviceSyncService implements SyncApi {
   }
 
   async status(): Promise<SyncStatus> {
-    return readSyncStatus(
+    if (this.running && this.controller && this.lastStatus)
+      return { ...this.lastStatus, progress: this.state.progress };
+    this.lastStatus = await readSyncStatus(
       this.options,
       await this.metadata(),
       this.state.progress
     );
+    return this.lastStatus;
   }
   async check(): Promise<SyncStatus> {
     return this.exclusive(async () => {
@@ -63,7 +67,10 @@ export class DeviceSyncService implements SyncApi {
           metadata.config,
           this.controller.signal
         );
-        const devices = await remote.devices(metadata.config.spaceId);
+        const devices = await remote.devices(
+          metadata.config.spaceId,
+          metadata.devices
+        );
         if (this.controller.signal.aborted) throw new Error("同步已取消。");
         await this.options.metadata.write({
           ...metadata,

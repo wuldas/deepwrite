@@ -64,6 +64,7 @@ export interface IpcCommandContext {
   requireLibraryAgentConfigStore: () => LibraryAgentConfigStore;
   requireLongAgentConfigStore: () => LongAgentConfigStore;
   requireLearningImitationConfigStore: () => LearningImitationConfigStore;
+  requireShortBookAnalysisConfigStore: () => import("../extras/short-book-analysis/config-store").ShortBookAnalysisConfigStore;
   requireLongBookAnalysisConfigStore: () => LongBookAnalysisConfigStore;
   requireWorkspaceDirectoryStore: () => WorkspaceDirectoryStore;
   requireAppearanceService: () => AppearanceService;

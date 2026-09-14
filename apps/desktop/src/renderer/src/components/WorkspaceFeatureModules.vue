@@ -27,6 +27,7 @@ import {
   DeviceSyncPage,
   LearningImitationDialog,
   LongBookAnalysisPage,
+  ShortBookAnalysisPage,
   StyleComparisonPage,
   ModelSettingsFeature,
   SettingsPage,
@@ -279,6 +280,23 @@ const emit = defineEmits<{
       :models="module.models"
       :catalog-snapshot="module.catalogSnapshot"
       :approval-mode="module.approvalMode"
+      @refresh-catalog="emit('refreshCatalog')"
+    />
+  </WorkspaceFeatureFrame>
+
+  <WorkspaceFeatureFrame
+    v-else-if="module.kind === 'short-book-analysis'"
+    class="long-book-analysis-main-view"
+    :left-collapsed="leftCollapsed"
+    expand-button-class="long-book-analysis-expand-sidebar"
+    label="短篇拆书分析"
+    @expand-left="emit('expandLeft')"
+  >
+    <ShortBookAnalysisPage
+      v-if="module.controller"
+      :controller="module.controller"
+      :models="module.models"
+      :catalog-snapshot="module.catalogSnapshot"
       @refresh-catalog="emit('refreshCatalog')"
     />
   </WorkspaceFeatureFrame>

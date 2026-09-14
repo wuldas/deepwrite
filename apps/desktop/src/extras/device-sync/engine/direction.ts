@@ -12,7 +12,7 @@ export function syncItemDirection(
   direction: SyncDirection,
   local: SyncItem | null,
   baseline: SyncMetadata["baselines"][string] | undefined,
-  candidates: SyncCandidate[]
+  candidates: Pick<SyncCandidate, "revision">[]
 ) {
   const upload = !sameSyncContent(baseline?.item ?? null, local);
   const download = hasRemoteSyncChange(

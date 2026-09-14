@@ -14,6 +14,7 @@ import { handleRendererStateCommands } from "./renderer-state-commands";
 import { handleSessionCommands } from "./session-commands";
 import { handleSettingsCommands } from "./settings-commands";
 import { handleLongBookAnalysisCommands } from "../extras/long-book-analysis/commands";
+import { handleShortBookAnalysisCommands } from "../extras/short-book-analysis/commands";
 
 export async function dispatchCommand(
   ctx: IpcCommandContext,
@@ -38,6 +39,20 @@ export async function dispatchCommand(
       )
     };
   }
+
+  const shortBookAnalysisResult = await handleShortBookAnalysisCommands(
+    {
+      dialog: ctx.dialog,
+      getMainWindow: ctx.getMainWindow,
+      configStore: ctx.requireShortBookAnalysisConfigStore,
+      getWorkspaceDirectory: async () =>
+        (await ctx.requireWorkspaceDirectoryStore().list()).path,
+      core: (innerCommand) =>
+        ctx.supervisor.requestCommand("core", innerCommand, 60_000)
+    },
+    command
+  );
+  if (shortBookAnalysisResult) return shortBookAnalysisResult;
 
   const longBookAnalysisResult = await handleLongBookAnalysisCommands(
     {

@@ -20,6 +20,7 @@ import {
 import { cloneLongBookAnalysisPreset } from "./preset-draft";
 
 const props = defineProps<{
+  short?: boolean;
   open: boolean;
   presets: readonly LongBookAnalysisPreset[];
   saving: boolean;
@@ -51,7 +52,14 @@ const domainOptions: PopupSelectOption[] = [
   { value: "skill", label: "技能库" }
 ];
 
-const draft = ref<LongBookAnalysisPreset[]>([]);
+type PresetDraft = LongBookAnalysisPreset & {
+  selectionMode?: "single" | "multiple";
+};
+const draft = ref<PresetDraft[]>([]);
+const selectionOptions = [
+  { value: "single", label: "单本（1 本）" },
+  { value: "multiple", label: "多本（1—10 本）" }
+];
 const draggedIndex = ref<number | null>(null);
 
 watch(
@@ -68,11 +76,15 @@ function addPreset(): void {
     return;
   }
   draft.value.push({
+    ...(props.short ? { selectionMode: "single" as const } : {}),
     id: createId("analysis_preset"),
     name: `新预设 ${draft.value.length + 1}`,
-    description: "说明这个预设要从长篇中提炼什么。",
-    systemPrompt:
-      "你是长篇拆书分析智能体。请基于章节证据提炼可复用的方法与结构，避免大段复制原文。",
+    description: props.short
+      ? "说明这个预设要从短篇中提炼什么。"
+      : "说明这个预设要从长篇中提炼什么。",
+    systemPrompt: props.short
+      ? "你是短篇拆书分析师。基于完整短篇提炼可复用方法，多本输入时联合比较并标明书名证据。"
+      : "你是长篇拆书分析智能体。请基于章节证据提炼可复用的方法与结构，避免大段复制原文。",
     output: { domain: "material", kind: "other", stageId: "other" }
   });
 }
@@ -260,6 +272,18 @@ function setKind(preset: LongBookAnalysisPreset, value: string | number): void {
               maxlength="500"
               aria-label="预设说明"
             />
+            <label v-if="short" class="preset-output-field"
+              ><span>可选择书本数量</span
+              ><PopupSelect
+                :model-value="preset.selectionMode ?? 'single'"
+                @update:model-value="
+                  preset.selectionMode =
+                    $event === 'multiple' ? 'multiple' : 'single'
+                "
+                :options="selectionOptions"
+                accessible-label="可选择书本数量"
+                :menu-z-index="3200"
+            /></label>
             <div class="preset-output-row">
               <label class="preset-output-field">
                 <span>输出领域</span>
@@ -320,136 +344,4 @@ function setKind(preset: LongBookAnalysisPreset, value: string | number): void {
   </Teleport>
 </template>
 
-<style scoped>
-.analysis-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 3000;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: color-mix(in srgb, #000 44%, transparent);
-  color: var(--text-primary);
-}
-.analysis-preset-modal {
-  display: flex;
-  flex-direction: column;
-  width: min(960px, 94vw);
-  max-height: 90vh;
-  overflow: hidden;
-  border: 1px solid var(--theme-line);
-  border-radius: 16px;
-  background: var(--surface-raised);
-  box-shadow: 0 24px 70px color-mix(in srgb, #000 30%, transparent);
-}
-.analysis-preset-modal > header,
-.analysis-preset-modal > footer,
-.preset-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--theme-line-soft);
-}
-.analysis-preset-modal > header p,
-.analysis-preset-modal > header h2 {
-  margin: 0;
-}
-.analysis-preset-modal > header p {
-  color: var(--text-tertiary);
-  font-size: 12px;
-}
-.analysis-preset-modal > header button,
-.preset-toolbar button,
-.preset-card-heading button,
-.analysis-preset-modal > footer button {
-  border: 0;
-  border-radius: 8px;
-  padding: 7px 10px;
-  background: var(--surface-muted);
-  color: var(--text-primary);
-  cursor: pointer;
-}
-.preset-toolbar span {
-  margin-left: auto;
-  color: var(--text-tertiary);
-}
-.preset-toolbar small {
-  color: var(--text-tertiary);
-  font-size: 12px;
-}
-.preset-list {
-  overflow: auto;
-  padding: 14px 18px;
-}
-.preset-list article {
-  display: grid;
-  gap: 10px;
-  margin-bottom: 12px;
-  padding: 14px;
-  border: 1px solid var(--theme-line-soft);
-  border-radius: 12px;
-  background: var(--surface-main);
-}
-.preset-list input,
-.preset-list textarea {
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid var(--theme-line-soft);
-  border-radius: 8px;
-  padding: 8px 10px;
-  background: var(--surface-muted);
-  color: var(--text-primary);
-  font: inherit;
-}
-.preset-list textarea {
-  min-height: 150px;
-  resize: vertical;
-  line-height: 1.6;
-}
-.preset-card-heading {
-  display: grid;
-  grid-template-columns: auto minmax(180px, 1fr) auto auto auto;
-  gap: 7px;
-  align-items: center;
-}
-.drag-handle {
-  color: var(--text-tertiary);
-  cursor: grab;
-}
-.preset-output-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-.preset-output-field {
-  display: grid;
-  min-width: 0;
-  gap: 6px;
-}
-.preset-output-field > span {
-  color: var(--text-tertiary);
-  font-size: 12px;
-}
-.analysis-preset-modal > footer {
-  justify-content: flex-end;
-  border-top: 1px solid var(--theme-line-soft);
-  border-bottom: 0;
-}
-.analysis-preset-modal .analysis-primary-button {
-  background: var(--text-primary);
-  color: var(--surface-main);
-}
-.delete-button {
-  color: var(--danger, #c64b4b) !important;
-}
-@media (max-width: 720px) {
-  .preset-output-row {
-    grid-template-columns: 1fr;
-  }
-  .preset-card-heading {
-    grid-template-columns: auto 1fr auto;
-  }
-}
-</style>
+<style scoped src="./preset-manager.css"></style>

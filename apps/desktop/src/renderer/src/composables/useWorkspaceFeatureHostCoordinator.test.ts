@@ -140,6 +140,10 @@ function createHarness(overrides: HarnessOverrides = {}) {
         controller: learningController,
         ensureLoaded: ensureLearningLoaded
       },
+      shortBookAnalysis: {
+        controller: shallowRef(null),
+        ensureLoaded: vi.fn(async () => {})
+      },
       longBookAnalysis: {
         controller: longBookAnalysisController,
         ensureLoaded: vi.fn(async () => undefined)

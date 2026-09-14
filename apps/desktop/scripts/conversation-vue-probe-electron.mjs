@@ -40,6 +40,52 @@ void app
       "new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))";
     const results = { versions: process.versions, samples: [] };
     try {
+      if (process.argv.includes("--context-only")) {
+        await win.loadURL(url);
+        await execute(
+          "new Promise(resolve => { const timer = setInterval(() => { if (window.runComposerContextProbe) { clearInterval(timer); resolve(); } }, 20); })"
+        );
+        const interactions = await execute("runComposerContextProbe()");
+        for (const [theme, size, width, height, kind] of [
+          ["light", 14, 1000, 820, "book"],
+          ["dark", 14, 1000, 820, "stage"],
+          ["light", 24, 390, 640, "stage"],
+          ["dark", 24, 390, 640, "book"]
+        ]) {
+          win.setContentSize(width, height);
+          results.samples.push(
+            await execute(
+              `showComposerContextProbe('${theme}', ${size}, '${kind}')`
+            )
+          );
+          await writeFile(
+            output.replace(/\.json$/, `-${theme}-${size}.png`),
+            (await win.capturePage()).toPNG()
+          );
+        }
+        await writeFile(
+          output,
+          `${JSON.stringify({ interactions, ...results }, null, 2)}\n`
+        );
+        console.log(
+          `Context picker probe passed: ${results.samples.length} layouts`
+        );
+        return;
+      }
+      if (process.argv.includes("--composer-only")) {
+        await win.loadURL(url);
+        await execute(
+          "new Promise((resolve, reject) => { const deadline = Date.now() + 15000; const timer = setInterval(() => { if (window.runComposerProbe) { clearInterval(timer); resolve(); } else if (Date.now() > deadline) { clearInterval(timer); reject(new Error('Composer fixture load timeout')); } }, 10); })"
+        );
+        const result = await execute("runComposerProbe()");
+        await writeFile(output, `${JSON.stringify(result, null, 2)}\n`);
+        await writeFile(
+          output.replace(/\.json$/, ".png"),
+          (await win.capturePage()).toPNG()
+        );
+        console.log(`Composer probe passed: ${result.samples.length} layouts`);
+        return;
+      }
       if (process.argv.includes("--management-only")) {
         await win.loadURL(url);
         win.webContents.focus();

@@ -64,7 +64,7 @@ function installRuntime(viewportWidth = 1400): RuntimeFixture {
       () =>
         ({
           getPropertyValue: (property: string) =>
-            property === "--center-pane-min" ? "420" : ""
+            property === "--center-pane-min" ? "320" : ""
         }) as CSSStyleDeclaration
     )
   } satisfies Partial<Window>);
@@ -146,8 +146,28 @@ describe("layout store", () => {
     store.setPaneCollapsed("right", false);
     store.setPaneCollapsed("left", true);
     store.setPaneWidth("right", 2_000);
-    expect(store.rightPaneWidth).toBe(780);
+    expect(store.rightPaneWidth).toBe(880);
     expect(store.rightPaneWidth).toBeLessThan(RIGHT_PANE_MAX);
+  });
+
+  it("lets the divider pass the old editor cap while preserving a 320px chat column", () => {
+    installRuntime(1920);
+    const store = useLayoutStore();
+    store.desktopShell = shell(1920, 0);
+    store.setPaneCollapsed("left", true);
+    store.startPaneResize("right", {
+      preventDefault: vi.fn()
+    } as unknown as PointerEvent);
+    store.handleResizeMove({ clientX: 100 } as PointerEvent);
+    expect(store.rightPaneWidth).toBe(1600);
+    expect(store.writingRightPaneViewModel.maxWidth).toBe(1600);
+    store.stopPaneResize();
+
+    store.desktopShell = shell(1000, 0);
+    store.reconcilePaneWidths();
+    store.setPaneWidth("right", 1600);
+    expect(store.rightPaneWidth).toBe(680);
+    expect(store.writingRightPaneViewModel.maxWidth).toBe(680);
   });
 
   it("tracks pointer resizing and removes global listeners on completion", () => {

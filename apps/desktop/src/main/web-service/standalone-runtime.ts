@@ -25,6 +25,7 @@ import { LearningImitationConfigStore } from "../learning-imitation-config-store
 import { LibraryAgentConfigStore } from "../library-agent-config-store";
 import { LongAgentConfigStore } from "../long-agent-config-store";
 import { LongBookAnalysisConfigStore } from "../extras/long-book-analysis/config-store";
+import { ShortBookAnalysisConfigStore } from "../extras/short-book-analysis/config-store";
 import { CloudBackupService } from "../../extras/cloud-backup/service";
 import { LegacySyncPreviewRegistry } from "../legacy-sync-preview-registry";
 import { MarketplaceClient } from "../marketplace-client";
@@ -223,6 +224,9 @@ export class StandaloneWebServiceRuntime {
       ),
       longAgentConfigStore: new LongAgentConfigStore(this.options.userDataPath),
       learningImitationConfigStore: new LearningImitationConfigStore(
+        this.options.userDataPath
+      ),
+      shortBookAnalysisConfigStore: new ShortBookAnalysisConfigStore(
         this.options.userDataPath
       ),
       longBookAnalysisConfigStore: new LongBookAnalysisConfigStore(

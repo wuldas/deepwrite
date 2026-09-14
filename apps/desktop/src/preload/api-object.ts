@@ -278,6 +278,7 @@ import {
 import { saveBuiltinSubagents } from "./agent-teams-api";
 import { appearance } from "./appearance-api";
 import { long } from "./long-api";
+import { shortBookAnalysisApi } from "./short-book-analysis-api";
 import {
   abort,
   getChatAssistantProjectConfig,
@@ -1675,6 +1676,7 @@ const api: DeepWriteApi = {
     duplicateProject
   },
   long,
+  shortBookAnalysis: shortBookAnalysisApi,
   session: {
     prompt,
     abort,

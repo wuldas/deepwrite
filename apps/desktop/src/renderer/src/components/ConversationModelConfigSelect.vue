@@ -233,6 +233,7 @@ onBeforeUnmount(() => {
       type="button"
       aria-haspopup="dialog"
       aria-label="模型配置"
+      :title="`${selectedModelLabel} · ${activeParameterLabel}`"
       :aria-controls="open ? menuId : undefined"
       :aria-expanded="open"
       :disabled="modelOptions.length === 0"

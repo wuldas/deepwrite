@@ -66,6 +66,20 @@ it("allows an empty device directory before the first upload", async () => {
   expect(transport.mkdir).not.toHaveBeenCalled();
 });
 
+it("reuses a known commit only while its device head is unchanged", async () => {
+  const { remote, transport, files, root } = fixture();
+  const known = await remote.devices("space_test");
+  transport.get.mockClear();
+  expect(await remote.devices("space_test", known)).toEqual(known);
+  expect(transport.get).toHaveBeenCalledTimes(1);
+  files.set(`${root}/device_test/head.json`, "damaged");
+  transport.get.mockClear();
+  expect(await remote.devices("space_test", known)).toEqual(known);
+  expect(
+    transport.get.mock.calls.some(([path]) => path.includes("/commits/"))
+  ).toBe(true);
+});
+
 it.each([false, true])(
   "preserves network errors while reading commits (fallback=%s)",
   async (fallback) => {

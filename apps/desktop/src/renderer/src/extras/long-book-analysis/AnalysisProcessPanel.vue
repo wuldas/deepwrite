@@ -1,15 +1,30 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import type { LongBookAnalysisProcessEntry } from "./analysis-process";
 import { analysisPhaseLabel } from "./analysis-process";
 
 const props = defineProps<{
-  entries: readonly LongBookAnalysisProcessEntry[];
+  entries: readonly (LongBookAnalysisProcessEntry | string)[];
   currentActivity: string;
   liveOutput: string;
   error: string | null;
+  footerText?: string;
 }>();
 
+const displayEntries = computed(() =>
+  props.entries.map((entry, index) =>
+    typeof entry === "string"
+      ? {
+          id: String(index),
+          title: entry,
+          tone: "info",
+          phase: null,
+          createdAt: null,
+          detail: null
+        }
+      : entry
+  )
+);
 const logElement = ref<HTMLElement | null>(null);
 
 function timeLabel(value: string): string {
@@ -47,7 +62,7 @@ onMounted(() => void scrollToLatest());
     <div ref="logElement" class="analysis-process-log" role="log">
       <ol v-if="entries.length">
         <li
-          v-for="entry in entries"
+          v-for="entry in displayEntries"
           :key="entry.id"
           :class="`is-${entry.tone}`"
         >
@@ -58,7 +73,7 @@ onMounted(() => void scrollToLatest());
               <span v-if="entry.phase">{{
                 analysisPhaseLabel(entry.phase)
               }}</span>
-              <time :datetime="entry.createdAt">{{
+              <time v-if="entry.createdAt" :datetime="entry.createdAt">{{
                 timeLabel(entry.createdAt)
               }}</time>
             </div>
@@ -73,7 +88,11 @@ onMounted(() => void scrollToLatest());
       </div>
     </div>
     <p v-if="error" class="analysis-process-error">{{ error }}</p>
-    <footer>显示阶段、读取、搜索和写入动作；内部思考文本不会展示。</footer>
+    <footer>
+      {{
+        footerText ?? "显示阶段、读取、搜索和写入动作；内部思考文本不会展示。"
+      }}
+    </footer>
   </section>
 </template>
 

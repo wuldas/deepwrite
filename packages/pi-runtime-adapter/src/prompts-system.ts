@@ -1,3 +1,4 @@
+import { shortAnalysisSystemPrompt } from "./short-book-analysis";
 import {
   renderLearningImitationSystemPrompt,
   MATERIAL_METADATA_AUTHORING_GUIDANCE
@@ -76,6 +77,14 @@ function buildWorkspaceAgentSystemPrompt(
         : [])
     ].join("\n");
   }
+  if (
+    input.shortBookAnalysisProfile &&
+    input.workspaceContext?.shortBookAnalysis
+  )
+    return [
+      basePrompt,
+      shortAnalysisSystemPrompt(input.shortBookAnalysisProfile)
+    ].join("\n\n");
   const longBookAnalysisProfile = input.longBookAnalysisProfile;
   const longBookAnalysisContext = input.workspaceContext?.longBookAnalysis;
   if (longBookAnalysisProfile && longBookAnalysisContext) {

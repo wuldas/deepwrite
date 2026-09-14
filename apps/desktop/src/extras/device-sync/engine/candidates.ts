@@ -1,42 +1,70 @@
-import type { LoadedSyncDevice, SyncIssue } from "@deepwrite/contracts";
+import {
+  clockIncludes,
+  type LoadedSyncDevice,
+  type SyncIssue
+} from "@deepwrite/contracts";
 import type { SyncCandidate } from "./plan-item";
 import type { SyncRemote } from "./remote";
 
+export function indexSyncCandidates(
+  devices: LoadedSyncDevice[],
+  excludedKeys: string[] = []
+) {
+  const result = new Map<string, Omit<SyncCandidate, "item">[]>();
+  for (const { commit } of devices)
+    for (const [key, revision] of Object.entries(commit.items)) {
+      if (excludedKeys.includes(key)) continue;
+      const entries = result.get(key) ?? [];
+      entries.push({
+        revision,
+        deviceId: commit.deviceId,
+        deviceName: commit.deviceName
+      });
+      result.set(key, entries);
+    }
+  return result;
+}
+
 export async function readSyncCandidates(
   remote: SyncRemote,
-  devices: LoadedSyncDevice[],
+  entries: Omit<SyncCandidate, "item">[],
   spaceId: string,
-  excludedKeys: string[],
+  key: string,
   signal: AbortSignal
-): Promise<{ candidates: Map<string, SyncCandidate[]>; issues: SyncIssue[] }> {
-  const candidates = new Map<string, SyncCandidate[]>();
+): Promise<{ candidates: SyncCandidate[]; issues: SyncIssue[] }> {
+  const candidates: SyncCandidate[] = [];
   const issues: SyncIssue[] = [];
-  for (const device of devices)
-    for (const [key, revision] of Object.entries(device.commit.items)) {
-      if (excludedKeys.includes(key)) continue;
-      try {
-        const item = await remote.item(spaceId, revision);
-        const entries = candidates.get(key) ?? [];
-        entries.push({
-          revision,
-          item,
-          deviceName: device.commit.deviceName,
-          deviceId: device.commit.deviceId
-        });
-        candidates.set(key, entries);
-      } catch {
-        if (signal.aborted) throw new Error("同步已取消。");
-        issues.push({
-          key,
-          title: revision.title,
-          token: "",
-          reason: "failed",
-          message: "网盘中的作品未通过完整性校验，本次未改动该作品。",
-          paths: [],
-          local: null,
-          versions: []
-        });
-      }
+  for (const entry of entries) {
+    const { revision } = entry;
+    // Superseded revisions cannot affect the merge; avoid fetching their packs.
+    if (
+      entries.some(
+        (other) =>
+          clockIncludes(other.revision.clock, revision.clock) &&
+          !clockIncludes(revision.clock, other.revision.clock)
+      )
+    )
+      continue;
+    try {
+      const item = await remote.item(spaceId, revision);
+      candidates.push({
+        ...entry,
+        revision,
+        item
+      });
+    } catch {
+      if (signal.aborted) throw new Error("同步已取消。");
+      issues.push({
+        key,
+        title: revision.title,
+        token: "",
+        reason: "failed",
+        message: "网盘中的作品未通过完整性校验，本次未改动该作品。",
+        paths: [],
+        local: null,
+        versions: []
+      });
     }
+  }
   return { candidates, issues };
 }

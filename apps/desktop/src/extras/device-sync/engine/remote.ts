@@ -25,6 +25,12 @@ export class SyncRemote {
     this.fileProgress = listener;
   }
   private readonly packs = new Map<string, Record<string, string>>();
+  private readonly contents = new Map<string, string>();
+  reuseItems(items: (SyncItem | null)[]): void {
+    for (const item of items)
+      for (const content of Object.values(item?.files ?? {}))
+        this.contents.set(this.runtime.hash(content), content);
+  }
   constructor(
     private readonly transport: SyncTransport,
     private readonly runtime: SyncRuntime,
@@ -84,7 +90,10 @@ export class SyncRemote {
     );
     return space;
   }
-  async devices(spaceId: string): Promise<LoadedSyncDevice[]> {
+  async devices(
+    spaceId: string,
+    known: LoadedSyncDevice[] = []
+  ): Promise<LoadedSyncDevice[]> {
     const root = `spaces/${syncIdSchema.parse(spaceId)}/devices`;
     const devices: LoadedSyncDevice[] = [];
     for (const id of await this.transport.list(root, this.signal)) {
@@ -97,14 +106,23 @@ export class SyncRemote {
       let loaded: LoadedSyncDevice | null = null;
       if (head) {
         const ref = syncHeadSchema.safeParse(parseRemoteJson(head));
-        if (ref.success)
-          loaded = await this.readCommit(
-            directory,
-            ref.data.sequence,
-            ref.data.hash,
-            spaceId,
-            id
-          );
+        if (ref.success) {
+          loaded =
+            known.find(
+              (entry) =>
+                entry.hash === ref.data.hash &&
+                entry.commit.spaceId === spaceId &&
+                entry.commit.deviceId === id &&
+                entry.commit.sequence === ref.data.sequence
+            ) ??
+            (await this.readCommit(
+              directory,
+              ref.data.sequence,
+              ref.data.hash,
+              spaceId,
+              id
+            ));
+        }
       }
       if (!loaded) {
         const groups = (
@@ -186,6 +204,12 @@ export class SyncRemote {
     let completed = 0;
     this.fileProgress?.(0, Object.keys(revision.files).length);
     for (const [path, ref] of Object.entries(revision.files)) {
+      const cached = this.contents.get(ref.hash);
+      if (cached !== undefined) {
+        files[path] = cached;
+        this.fileProgress?.(++completed, Object.keys(revision.files).length);
+        continue;
+      }
       let pack = this.packs.get(ref.pack);
       if (!pack) {
         const text = await this.transport.get(
@@ -201,6 +225,7 @@ export class SyncRemote {
       if (content === undefined || this.runtime.hash(content) !== ref.hash)
         throw new Error("同步文件校验失败。");
       files[path] = content;
+      this.contents.set(ref.hash, content);
       this.fileProgress?.(++completed, Object.keys(revision.files).length);
     }
     return checkedSyncItem({

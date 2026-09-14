@@ -13,6 +13,7 @@ import lazyShortBookLifecycleSource from "./composables/useLazyShortBookLifecycl
 import longBookLifecycleSource from "./composables/useLongBookLifecycleCoordinator.ts?raw";
 import longStructureTransactionsSource from "./composables/useLongStructureTransactionsCoordinator.ts?raw";
 import longStructureTransactionsSyncSource from "./composables/long-structure-transactions/sync.ts?raw";
+import resourceNavigationSource from "./composables/useWorkspaceResourceNavigation.ts?raw";
 import resourceSource from "./composables/useWorkspaceResourceCoordinator.ts?raw";
 import resourceTreeSource from "./composables/useWorkspaceResourceTreeCoordinator.ts?raw";
 import shortConversationSource from "./composables/useShortConversationCoordinator.ts?raw";
@@ -45,7 +46,10 @@ describe("App performance boundaries", () => {
     expect(source).toContain("useCatalogLibraryTransactionsCoordinator");
     expect(source).toContain("useCatalogDocumentPersistence");
     expect(source).toContain("useCatalogWorkspaceProjectionCoordinator");
-    expect(source).toContain("useWorkspaceResourceCoordinator");
+    expect(source).toContain("useWorkspaceResourceNavigation");
+    expect(resourceNavigationSource).toContain(
+      "useWorkspaceResourceCoordinator(options)"
+    );
     expect(source).toContain("useWorkspaceResourceTreeCoordinator");
     expect(source).toContain("useShortConversationCoordinator");
     expect(source).toContain("useShortWorkspaceStructureCoordinator");

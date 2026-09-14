@@ -60,6 +60,13 @@ export function buildWorkspaceFeatureModule(
         catalogSnapshot: options.catalogSnapshot.value,
         approvalMode: settingsStore.generalSettings.permissionMode
       };
+    case "short-book-analysis":
+      return {
+        kind: "short-book-analysis",
+        controller: options.features.shortBookAnalysis.controller.value,
+        models: settingsStore.modelSettings?.models ?? [],
+        catalogSnapshot: options.catalogSnapshot.value
+      };
     case "long-book-analysis":
       return {
         kind: "long-book-analysis",

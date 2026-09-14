@@ -22,6 +22,7 @@ const props = defineProps<{
   selectedId: string;
   imitationRunning?: boolean;
   longBookAnalysisRunning?: boolean;
+  shortBookAnalysisRunning?: boolean;
   libraryEntryClipboardDomain?: "skill" | "material" | undefined;
   activePrimaryFeature:
     | PrimaryFeatureId
@@ -108,6 +109,7 @@ const moreFeatures: Array<{
   id:
     | "imitation"
     | "long-book-analysis"
+    | "short-book-analysis"
     | "style-comparison"
     | "skill-marketplace"
     | "cloud-backup"
@@ -123,6 +125,12 @@ const moreFeatures: Array<{
     label: "短篇学习仿写",
     description: "学习范文并生成同类短篇",
     icon: "wand"
+  },
+  {
+    id: "short-book-analysis",
+    label: "短篇拆书分析",
+    description: "整篇分析，支持最多 10 本联合提炼",
+    icon: "book"
   },
   {
     id: "long-book-analysis",
@@ -172,6 +180,7 @@ function activateMoreFeature(
   id:
     | "imitation"
     | "long-book-analysis"
+    | "short-book-analysis"
     | "style-comparison"
     | "skill-marketplace"
     | "cloud-backup"
@@ -185,6 +194,10 @@ function activateMoreFeature(
   }
   if (id === "imitation") {
     emit("openDialog", "imitation");
+    return;
+  }
+  if (id === "short-book-analysis") {
+    emit("openDialog", "short-book-analysis");
     return;
   }
   if (id === "long-book-analysis") {
@@ -323,6 +336,8 @@ function activateNav(id: "create-book" | PrimaryFeatureId): void {
             </span>
             <span
               v-if="
+                (feature.id === 'short-book-analysis' &&
+                  props.shortBookAnalysisRunning) ||
                 (feature.id === 'imitation' && props.imitationRunning) ||
                 (feature.id === 'long-book-analysis' &&
                   props.longBookAnalysisRunning)
@@ -331,7 +346,9 @@ function activateNav(id: "create-book" | PrimaryFeatureId): void {
               :title="
                 feature.id === 'imitation'
                   ? '学习仿写正在后台运行'
-                  : '长篇拆书正在后台运行'
+                  : feature.id === 'short-book-analysis'
+                    ? '短篇拆书正在后台运行'
+                    : '长篇拆书正在后台运行'
               "
             >
               <i aria-hidden="true" />后台中

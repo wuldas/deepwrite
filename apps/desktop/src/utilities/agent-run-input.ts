@@ -129,6 +129,9 @@ export function createAgentRunInput(
     ...(payload.learningImitationProfile
       ? { learningImitationProfile: payload.learningImitationProfile }
       : {}),
+    ...(payload.shortBookAnalysisProfile
+      ? { shortBookAnalysisProfile: payload.shortBookAnalysisProfile }
+      : {}),
     ...(payload.longBookAnalysisProfile
       ? { longBookAnalysisProfile: payload.longBookAnalysisProfile }
       : {}),

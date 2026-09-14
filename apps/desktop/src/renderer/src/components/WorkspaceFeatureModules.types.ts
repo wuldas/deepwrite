@@ -139,6 +139,14 @@ export interface ZhuqueDetectionFeatureModule {
 }
 
 export type WorkspaceFeatureModule =
+  | {
+      kind: "short-book-analysis";
+      controller:
+        | import("../extras/short-book-analysis/useShortBookAnalysis").ShortBookAnalysisController
+        | null;
+      models: readonly ModelConfig[];
+      catalogSnapshot: CatalogSnapshot | null;
+    }
   | SettingsFeatureModule
   | AgentTeamFeatureModule
   | DirectoryFeatureModule

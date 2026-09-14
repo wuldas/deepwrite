@@ -9,6 +9,7 @@ import type { LearningImitationConfigStore } from "../learning-imitation-config-
 import type { LibraryAgentConfigStore } from "../library-agent-config-store";
 import type { LongAgentConfigStore } from "../long-agent-config-store";
 import type { LongBookAnalysisConfigStore } from "../extras/long-book-analysis/config-store";
+import type { ShortBookAnalysisConfigStore } from "../extras/short-book-analysis/config-store";
 import type { LegacySyncPreviewRegistry } from "../legacy-sync-preview-registry";
 import type { ModelConfigStore } from "../model-config-store";
 import type { ModelUsageStore } from "../model-usage-store";
@@ -41,6 +42,7 @@ export interface StandaloneCommandContextOptions {
   longAgentConfigStore: LongAgentConfigStore;
   learningImitationConfigStore: LearningImitationConfigStore;
   longBookAnalysisConfigStore: LongBookAnalysisConfigStore;
+  shortBookAnalysisConfigStore: ShortBookAnalysisConfigStore;
   workspaceDirectoryStore: WorkspaceDirectoryStore;
   appearanceService: AppearanceService;
   generalSettingsStore: GeneralSettingsStore;
@@ -111,6 +113,8 @@ export function createStandaloneCommandContext(
     requireLongAgentConfigStore: () => options.longAgentConfigStore,
     requireLearningImitationConfigStore: () =>
       options.learningImitationConfigStore,
+    requireShortBookAnalysisConfigStore: () =>
+      options.shortBookAnalysisConfigStore,
     requireLongBookAnalysisConfigStore: () =>
       options.longBookAnalysisConfigStore,
     requireWorkspaceDirectoryStore: requireWorkspaceDirectory,

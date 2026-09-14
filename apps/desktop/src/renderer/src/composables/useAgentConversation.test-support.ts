@@ -1,3 +1,4 @@
+import { createBookAnalysisTestApi } from "./book-analysis.test-support";
 import { createUnusedLongApi } from "./unusedLongApi.test-support";
 import { createModelApiTestFixture } from "./modelApiTestFixture";
 import { defaultBuiltinSubagentSettings } from "@deepwrite/contracts/renderer";
@@ -591,42 +592,7 @@ function createDeferredApi(): {
         );
       }
     },
-    longBookAnalysis: {
-      async chooseSource() {
-        throw new Error(
-          "Long book analysis is not used by conversation tests."
-        );
-      },
-      sources: {
-        async list() {
-          throw new Error(
-            "Long book analysis is not used by conversation tests."
-          );
-        },
-        async load() {
-          throw new Error(
-            "Long book analysis is not used by conversation tests."
-          );
-        }
-      },
-      presets: {
-        async list() {
-          throw new Error(
-            "Long book analysis is not used by conversation tests."
-          );
-        },
-        async save() {
-          throw new Error(
-            "Long book analysis is not used by conversation tests."
-          );
-        },
-        async reset() {
-          throw new Error(
-            "Long book analysis is not used by conversation tests."
-          );
-        }
-      }
-    },
+    ...createBookAnalysisTestApi(),
     workspaceDirectory: {
       async list() {
         return { path: null };

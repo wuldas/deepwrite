@@ -14,7 +14,7 @@ import {
   type SyncMetadata
 } from "@deepwrite/contracts";
 import { connectedSyncRemote, loadSyncMetadata } from "./connection";
-import { readSyncCandidates } from "./candidates";
+import { indexSyncCandidates, readSyncCandidates } from "./candidates";
 import { planSyncItem } from "./plan-item";
 import { transferSyncItem } from "./transfer-item";
 import { publishSync } from "./persistence";
@@ -51,7 +51,7 @@ export async function runSync(
     title: "检查网盘修改"
   };
   const remote = await connectedSyncRemote(options, config, signal);
-  const devices = await remote.devices(config.spaceId);
+  const devices = await remote.devices(config.spaceId, metadata.devices);
   metadata = {
     ...metadata,
     devices: devices,
@@ -61,15 +61,7 @@ export async function runSync(
   remote.setFileProgress((filesCompleted, filesTotal) => {
     state.progress = { ...state.progress, filesCompleted, filesTotal };
   });
-  const loaded = await readSyncCandidates(
-    remote,
-    devices,
-    config.spaceId,
-    config.excludedKeys,
-    signal
-  );
-  const candidates = loaded.candidates;
-  state.issues.push(...loaded.issues);
+  const candidates = indexSyncCandidates(devices, config.excludedKeys);
   const selected = adoption ? new Set(adoption.keys) : null;
   if (selected)
     state.issues.push(
@@ -100,10 +92,10 @@ export async function runSync(
     .filter((key) => !config.excludedKeys.includes(key))
     .sort(
       (a, b) =>
-        (candidates.get(a)?.some((entry) => !entry.item)
+        (candidates.get(a)?.some((entry) => !entry.revision.files)
           ? 3
           : syncDependencyOrder(a)) -
-        (candidates.get(b)?.some((entry) => !entry.item)
+        (candidates.get(b)?.some((entry) => !entry.revision.files)
           ? 3
           : syncDependencyOrder(b))
     );
@@ -169,11 +161,27 @@ export async function runSync(
       continue;
     }
     if (selected && !selected.has(key)) continue;
+    if (!adoption && baseline) remote.reuseItems([baseline.item]);
+    state.progress = {
+      phase: "transferring",
+      completed,
+      total,
+      title: `读取变化：${initial?.title ?? candidates.get(key)?.[0]?.revision.title ?? key}`
+    };
+    const loaded = await readSyncCandidates(
+      remote,
+      candidates.get(key) ?? [],
+      config.spaceId,
+      key,
+      signal
+    );
+    state.issues.push(...loaded.issues);
+    if (loaded.issues.length) continue;
     let plan = planSyncItem({
       key,
       local: initial,
       baseline: metadata.baselines[key],
-      candidates: candidates.get(key) ?? [],
+      candidates: loaded.candidates,
       ancestors: metadata.ancestors[key] ?? [],
       resolutions,
       hash: options.runtime.hash

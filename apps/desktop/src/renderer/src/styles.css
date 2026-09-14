@@ -23,7 +23,7 @@
   text-rendering: optimizeLegibility;
   --left-pane-width: 286px;
   --right-pane-width: clamp(410px, 34vw, 650px);
-  --center-pane-min: 420px;
+  --center-pane-min: 320px;
   --line: var(--theme-line, #dedfdf);
   --line-soft: var(--theme-line-soft, #e9e9e7);
   --text: var(--text-primary, #202226);
@@ -2864,6 +2864,7 @@ html[data-theme="dark"]
 .composer-wrap {
   position: relative;
   z-index: 2;
+  container: composer / inline-size;
   padding: 10px max(18px, calc((100% - 760px) / 2)) 10px;
   background: linear-gradient(
     to bottom,
@@ -3035,7 +3036,7 @@ html[data-theme="dark"]
 .composer-input-surface {
   position: relative;
   z-index: 1;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--theme-line);
   border-radius: 21px;
   background: var(--surface-main);
@@ -3325,6 +3326,58 @@ html[data-theme="dark"]
 .stop-button:not(:disabled) {
   background: var(--text-primary);
   color: var(--accent-contrast, #ffffff);
+}
+
+/* The controls respond to the chat column, including divider-only resizing. */
+.composer-toolbar {
+  position: relative;
+}
+
+.composer-tools {
+  flex: 1 1 0;
+}
+
+.composer-actions {
+  flex: 0 0 auto;
+}
+
+.composer-tools .conversation-model-config,
+.composer-tools .conversation-model-config-trigger {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.composer-tools .conversation-model-config {
+  flex: 0 1 auto;
+}
+
+.composer-tools .conversation-model-config-icons,
+.composer-tools .conversation-model-config-chevron {
+  flex: 0 0 auto;
+}
+
+.composer-tools .conversation-model-config-label {
+  min-width: 0;
+}
+
+/* Keep the font-scaled breakpoint below the composer's 760px content cap. */
+@container composer (max-width: min(32rem, 560px)) {
+  .composer-tools .conversation-model-config-summary {
+    display: none;
+  }
+
+  .composer-tools .conversation-model-config-label {
+    max-width: 8em;
+  }
+
+  .composer-context-bar {
+    gap: 12px;
+    padding-inline: 12px;
+  }
+
+  .composer-stage-context {
+    flex: 0 1 auto;
+  }
 }
 
 /* Right editor */
@@ -5767,7 +5820,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb {
   :root {
     --left-pane-width: 262px;
     --right-pane-width: 395px;
-    --center-pane-min: 390px;
+    --center-pane-min: 320px;
   }
 
   .desktop-shell,

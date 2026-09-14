@@ -1,3 +1,4 @@
+import { buildShortBookAnalysisTools } from "./short-book-analysis";
 import type {
   AgentMessage,
   AgentTool,
@@ -156,22 +157,27 @@ export function buildRunTools(
               learningImitation,
               input.writeApprovalMode ?? "request-approval"
             )
-          : longBookAnalysis && input.longBookAnalysisProfile
-            ? buildLongBookAnalysisTools(longBookAnalysis)
-            : libraryWorkspace && input.libraryAgentProfile
-              ? buildLibraryAgentTools({
-                  workspace: libraryWorkspace,
-                  profile: input.libraryAgentProfile,
-                  writeApprovalMode:
-                    input.writeApprovalMode ?? "request-approval",
-                  attachedSkills: input.workspaceContext?.attachedSkills
-                })
-              : longWorkspace && input.longAgentProfile
-                ? buildLongTools()
-                : (scriptWorkspace && input.scriptAgentProfile) ||
-                    (shortWorkspace && input.agentProfile)
-                  ? buildWritingTools()
-                  : [];
+          : input.workspaceContext?.shortBookAnalysis &&
+              input.shortBookAnalysisProfile
+            ? buildShortBookAnalysisTools(
+                input.workspaceContext.shortBookAnalysis
+              )
+            : longBookAnalysis && input.longBookAnalysisProfile
+              ? buildLongBookAnalysisTools(longBookAnalysis)
+              : libraryWorkspace && input.libraryAgentProfile
+                ? buildLibraryAgentTools({
+                    workspace: libraryWorkspace,
+                    profile: input.libraryAgentProfile,
+                    writeApprovalMode:
+                      input.writeApprovalMode ?? "request-approval",
+                    attachedSkills: input.workspaceContext?.attachedSkills
+                  })
+                : longWorkspace && input.longAgentProfile
+                  ? buildLongTools()
+                  : (scriptWorkspace && input.scriptAgentProfile) ||
+                      (shortWorkspace && input.agentProfile)
+                    ? buildWritingTools()
+                    : [];
   if (
     ((scriptWorkspace && input.scriptAgentProfile) ||
       (shortWorkspace && input.agentProfile) ||

@@ -33,9 +33,13 @@ const server = await createServer({
 try {
   await server.listen();
   const url = new URL(
-    process.argv.includes("--management-only")
-      ? "apps/desktop/scripts/fixtures/conversation-management-probe.html"
-      : "apps/desktop/scripts/fixtures/conversation-vue-probe.html",
+    process.argv.includes("--context-only")
+      ? "apps/desktop/scripts/fixtures/composer-context-probe.html"
+      : process.argv.includes("--composer-only")
+        ? "apps/desktop/scripts/fixtures/composer-layout-probe.html"
+        : process.argv.includes("--management-only")
+          ? "apps/desktop/scripts/fixtures/conversation-management-probe.html"
+          : "apps/desktop/scripts/fixtures/conversation-vue-probe.html",
     server.resolvedUrls.local[0]
   );
   const child = spawn(

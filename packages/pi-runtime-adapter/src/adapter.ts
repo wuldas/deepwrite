@@ -1,3 +1,5 @@
+import { analysisFauxResponses } from "./analysis-faux";
+import { assertShortAnalysisBudget } from "@deepwrite/contracts";
 import { buildRunTools } from "./run-tools";
 import { libraryManagementParentPrompt } from "./library-management-runtime";
 
@@ -13,7 +15,6 @@ import {
   fauxProvider,
   fauxText,
   fauxThinking,
-  fauxToolCall,
   isRetryableAssistantError,
   type Api,
   type AssistantMessage,
@@ -386,49 +387,9 @@ export class PiAgentRuntimeAdapter implements AgentRuntime {
       effectiveThinkingLevel = toPiThinkingLevel(
         input.thinkingLevel ?? "medium"
       );
-      const analysisContext = input.workspaceContext?.longBookAnalysis;
-      if (analysisContext) {
-        const chapterStart = analysisContext.selectionStart;
-        const chapterEnd = analysisContext.selectionEnd;
-        const toolCall =
-          analysisContext.phase === "final"
-            ? fauxToolCall(
-                "write_analysis_result",
-                {
-                  title: `${input.longBookAnalysisProfile?.name ?? "长篇拆书"}｜第 ${chapterStart}-${chapterEnd} 章`,
-                  body: [
-                    `# ${input.longBookAnalysisProfile?.name ?? "长篇拆书分析"}`,
-                    "",
-                    `> 分析范围：第 ${chapterStart}-${chapterEnd} 章`,
-                    "",
-                    "## 核心发现",
-                    "",
-                    "- 这是 Faux Runtime 生成的端到端验证结果；真实模型会依据分批笔记填充完整证据、结构与可复用模板。",
-                    "",
-                    "## 执行模板",
-                    "",
-                    "1. 识别章节目标与阻力。",
-                    "2. 标记转折、兑现与结尾钩子。",
-                    "3. 将重复规律整理成可迁移检查清单。"
-                  ].join("\n")
-                },
-                { id: `${input.runId}-analysis-result` }
-              )
-            : fauxToolCall(
-                "write_analysis_note",
-                {
-                  text: [
-                    `范围：第 ${chapterStart}-${chapterEnd} 章。`,
-                    `阶段：${analysisContext.phase === "batch" ? "章节分批提炼" : "中间笔记归并"}。`,
-                    "Faux 验证笔记：已保留章节范围、关键结构标签与递归归并所需的摘要边界。"
-                  ].join("\n")
-                },
-                { id: `${input.runId}-analysis-note` }
-              );
-        faux.setResponses([
-          fauxAssistantMessage(toolCall, { stopReason: "toolUse" }),
-          fauxAssistantMessage(fauxText("当前长篇拆书阶段已完成。"))
-        ]);
+      const analysisResponses = analysisFauxResponses(input);
+      if (analysisResponses) {
+        faux.setResponses(analysisResponses);
       } else {
         faux.setResponses([
           fauxAssistantMessage(
@@ -443,6 +404,15 @@ export class PiAgentRuntimeAdapter implements AgentRuntime {
       }
     }
 
+    if (
+      input.workspaceContext?.shortBookAnalysis &&
+      input.shortBookAnalysisProfile
+    )
+      assertShortAnalysisBudget(
+        input.workspaceContext.shortBookAnalysis,
+        input.shortBookAnalysisProfile,
+        model
+      );
     const shortWorkspace = input.workspaceContext?.shortWorkspace;
     const scriptWorkspace = input.workspaceContext?.scriptWorkspace;
     const imageAttachments =
@@ -491,7 +461,11 @@ export class PiAgentRuntimeAdapter implements AgentRuntime {
       if (agent.state.isStreaming) {
         throw new Error("The selected conversation agent is already running.");
       }
-      if (input.learningImitationProfile || input.longBookAnalysisProfile) {
+      if (
+        input.learningImitationProfile ||
+        input.longBookAnalysisProfile ||
+        input.shortBookAnalysisProfile
+      ) {
         // Preset analyses are self-contained. Their current inputs are exposed
         // explicitly through tools, so replaying prior calls would only pollute
         // the next batch or reduce pass.

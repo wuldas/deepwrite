@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { expectSourceToContain } from "../../../test-utils/sourceText";
-import source from "./ModelUsagePanel.vue?raw";
+import panelSource from "./ModelUsagePanel.vue?raw";
+import presentationSource from "../composables/useModelUsagePanel.ts?raw";
+
+const source = `${panelSource}\n${presentationSource}`;
 
 describe("ModelUsagePanel", () => {
   it("provides a local usage dashboard with time-range queries", () => {

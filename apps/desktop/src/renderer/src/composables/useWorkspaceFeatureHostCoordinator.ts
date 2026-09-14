@@ -77,6 +77,13 @@ export function useWorkspaceFeatureHostCoordinator(
       if (active && message) options.notifications.error(message);
     }
   );
+  const stopShortBookAnalysisErrorWatch = watch(
+    () =>
+      options.features.shortBookAnalysis.controller.value?.error.value ?? null,
+    (message) => {
+      if (active && message) options.notifications.error(message);
+    }
+  );
   const stopLongBookAnalysisErrorWatch = watch(
     () =>
       options.features.longBookAnalysis.controller.value?.error.value ?? null,
@@ -125,11 +132,17 @@ export function useWorkspaceFeatureHostCoordinator(
   async function openWorkspaceDialog(mode: DialogMode): Promise<void> {
     const generation = beginNavigation();
     if (!(await canApplyNavigation(generation))) return;
-    if (mode === "imitation" || mode === "long-book-analysis") {
+    if (
+      mode === "imitation" ||
+      mode === "long-book-analysis" ||
+      mode === "short-book-analysis"
+    ) {
       try {
         await (mode === "imitation"
           ? options.features.learningImitation.ensureLoaded()
-          : options.features.longBookAnalysis.ensureLoaded());
+          : mode === "short-book-analysis"
+            ? options.features.shortBookAnalysis.ensureLoaded()
+            : options.features.longBookAnalysis.ensureLoaded());
       } catch (error: unknown) {
         if (navigationIsCurrent(generation)) {
           options.notifications.error(
@@ -137,7 +150,9 @@ export function useWorkspaceFeatureHostCoordinator(
               error,
               mode === "imitation"
                 ? "加载学习仿写模块失败。"
-                : "加载长篇拆书模块失败。"
+                : mode === "short-book-analysis"
+                  ? "加载短篇拆书模块失败。"
+                  : "加载长篇拆书模块失败。"
             )
           );
         }
@@ -153,6 +168,7 @@ export function useWorkspaceFeatureHostCoordinator(
       (mode === "models" ||
         mode === "imitation" ||
         mode === "long-book-analysis" ||
+        mode === "short-book-analysis" ||
         mode === "style-comparison") &&
       !settingsStore.modelSettings &&
       options.api()
@@ -369,6 +385,7 @@ export function useWorkspaceFeatureHostCoordinator(
     stopLearningErrorWatch();
     stopAuthoringErrorWatch();
     stopLongBookAnalysisErrorWatch();
+    stopShortBookAnalysisErrorWatch();
   }
 
   return {

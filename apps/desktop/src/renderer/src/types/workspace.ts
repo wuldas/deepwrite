@@ -278,4 +278,5 @@ export type DialogMode =
   | "models"
   | "imitation"
   | "long-book-analysis"
+  | "short-book-analysis"
   | "style-comparison";

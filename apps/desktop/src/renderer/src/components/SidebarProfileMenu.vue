@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import type { UpdateState } from "@deepwrite/contracts";
 import AppIcon from "./AppIcon.vue";
+import { AuthorSupportDialog } from "./lazyAppComponents";
 import { uiMessage } from "../ui-feedback";
 const props = defineProps<{ marketplaceDisplayName?: string | undefined }>();
 const emit = defineEmits<{ openSettings: [] }>();
@@ -10,7 +11,7 @@ const DEFAULT_USER_NAME = "作者";
 
 const accountMenuRoot = ref<HTMLElement | null>(null);
 const accountMenuOpen = ref(false);
-const profileDialog = ref<"contact" | "update" | null>(null);
+const profileDialog = ref<"contact" | "update" | "support" | null>(null);
 const displayedUserName = computed(
   () => props.marketplaceDisplayName?.trim() || DEFAULT_USER_NAME
 );
@@ -59,6 +60,11 @@ function toggleAccountMenu(): void {
 function openContactDialog(): void {
   accountMenuOpen.value = false;
   profileDialog.value = "contact";
+}
+
+function openSupportDialog(): void {
+  accountMenuOpen.value = false;
+  profileDialog.value = "support";
 }
 
 async function openUpdateDialog(): Promise<void> {
@@ -115,8 +121,16 @@ async function installUpdate(): Promise<void> {
 }
 
 function closeProfileDialog(): void {
-  if (updateInstalling.value) return;
+  if (profileDialog.value === "update" && updateInstalling.value) return;
+  const restoreFocus = profileDialog.value === "support";
   profileDialog.value = null;
+  if (restoreFocus) {
+    void nextTick(() => {
+      accountMenuRoot.value
+        ?.querySelector<HTMLButtonElement>("button")
+        ?.focus();
+    });
+  }
 }
 
 function openSettings(): void {
@@ -195,6 +209,10 @@ onBeforeUnmount(() => {
             <AppIcon name="message" :size="16" />
             <span>联系作者</span>
           </button>
+          <button type="button" role="menuitem" @click="openSupportDialog">
+            <AppIcon name="sparkles" :size="16" />
+            <span>赞赏作者</span>
+          </button>
         </div>
       </div>
 
@@ -209,6 +227,10 @@ onBeforeUnmount(() => {
       </button>
     </div>
   </footer>
+  <AuthorSupportDialog
+    v-if="profileDialog === 'support'"
+    @close="closeProfileDialog"
+  />
   <Teleport to="body">
     <div
       v-if="profileDialog === 'contact'"
